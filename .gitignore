@@ -21,3 +21,8 @@ node_modules
 
 # cli
 dist
+
+# python, for docs/analysis.ipynb
+.venv
+.ipynb_checkpoints
+__pycache__

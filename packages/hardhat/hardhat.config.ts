@@ -79,6 +79,7 @@ export default defineConfig({
       type: "http",
       url: `https://eth-sepolia.g.alchemy.com/v2/${providerApiKey}`,
       accounts: [deployerPrivateKey],
+      gasPrice: 50_000_000, // 0.05 gwei; the default tip drains a small test wallet
     },
     optimism: {
       type: "http",
