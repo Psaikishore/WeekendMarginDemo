@@ -1,0 +1,7 @@
+# Python packages for docs/analysis.ipynb. Python 3.10 or newer.
+numpy>=2
+pandas>=2.2
+matplotlib>=3.9
+requests>=2.32
+web3>=7
+jupyter>=1.1
