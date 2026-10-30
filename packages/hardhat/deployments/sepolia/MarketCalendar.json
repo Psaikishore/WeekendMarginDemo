@@ -1,0 +1,137 @@
+{
+  "address": "0xc130421bf0d52a45502a4aaea8d2983f32512031",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "timestamp",
+          "type": "uint256"
+        }
+      ],
+      "name": "dayOfWeek",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "isDemo",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "isOpen",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "isWeekend",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "secondsUntilOpen",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "contractName": "MarketCalendar",
+  "sourceName": "contracts/MarketCalendar.sol",
+  "bytecode": "0x6080604052348015600e575f5ffd5b5061024b8061001c5f395ff3fe608060405234801561000f575f5ffd5b5060043610610055575f3560e01c806347535d7b14610059578063b896368114610076578063c15571e91461007e578063dc0ff0c51461009f578063ddb60668146100a5575b5f5ffd5b6100616100ad565b60405190151581526020015b60405180910390f35b6100616100bc565b61009161008c366004610173565b6100dc565b60405190815260200161006d565b5f610061565b610091610107565b5f6100b66100bc565b15905090565b5f5f6100c7426100dc565b90508015806100d65750806006145b91505090565b5f60076100ec62015180846101b2565b6100f79060046101c5565b61010191906101d8565b92915050565b5f5f610112426100dc565b90508015801590610124575080600614155b15610130575f91505090565b5f81600614610140576001610143565b60025b60ff16905061015562015180426101d8565b61016282620151806101eb565b61016c9190610202565b9250505090565b5f60208284031215610183575f5ffd5b5035919050565b634e487b7160e01b5f52601260045260245ffd5b634e487b7160e01b5f52601160045260245ffd5b5f826101c0576101c061018a565b500490565b808201808211156101015761010161019e565b5f826101e6576101e661018a565b500690565b80820281158282048414176101015761010161019e565b818103818111156101015761010161019e56fea2646970667358221220301ca82be967ea0cb9433119b0501823bd7efaa879573bc8b10ab5e23b2763e564736f6c634300081e0033",
+  "deployedBytecode": "0x608060405234801561000f575f5ffd5b5060043610610055575f3560e01c806347535d7b14610059578063b896368114610076578063c15571e91461007e578063dc0ff0c51461009f578063ddb60668146100a5575b5f5ffd5b6100616100ad565b60405190151581526020015b60405180910390f35b6100616100bc565b61009161008c366004610173565b6100dc565b60405190815260200161006d565b5f610061565b610091610107565b5f6100b66100bc565b15905090565b5f5f6100c7426100dc565b90508015806100d65750806006145b91505090565b5f60076100ec62015180846101b2565b6100f79060046101c5565b61010191906101d8565b92915050565b5f5f610112426100dc565b90508015801590610124575080600614155b15610130575f91505090565b5f81600614610140576001610143565b60025b60ff16905061015562015180426101d8565b61016282620151806101eb565b61016c9190610202565b9250505090565b5f60208284031215610183575f5ffd5b5035919050565b634e487b7160e01b5f52601260045260245ffd5b634e487b7160e01b5f52601160045260245ffd5b5f826101c0576101c061018a565b500490565b808201808211156101015761010161019e565b5f826101e6576101e661018a565b500690565b80820281158282048414176101015761010161019e565b818103818111156101015761010161019e56fea2646970667358221220301ca82be967ea0cb9433119b0501823bd7efaa879573bc8b10ab5e23b2763e564736f6c634300081e0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {},
+  "immutableReferences": {},
+  "inputSourceName": "project/contracts/MarketCalendar.sol",
+  "devdoc": {
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  },
+  "evm": {
+    "gasEstimates": {
+      "creation": {
+        "codeDepositCost": "117400",
+        "executionCost": "163",
+        "totalCost": "117563"
+      },
+      "external": {
+        "dayOfWeek(uint256)": "infinite",
+        "isDemo()": "229",
+        "isOpen()": "infinite",
+        "isWeekend()": "infinite",
+        "secondsUntilOpen()": "infinite"
+      }
+    }
+  },
+  "metadata": "{\"compiler\":{\"version\":\"0.8.30+commit.73712a01\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"timestamp\",\"type\":\"uint256\"}],\"name\":\"dayOfWeek\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"isDemo\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"isOpen\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"isWeekend\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"secondsUntilOpen\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{\"dayOfWeek(uint256)\":{\"notice\":\"0 = Sunday ... 6 = Saturday. 1 January 1970 was a Thursday (4).\"},\"isDemo()\":{\"notice\":\"True for the demo calendar, whose weekend is switched by an operator.\"},\"secondsUntilOpen()\":{\"notice\":\"Seconds until the market opens; 0 when it is open.\"}},\"notice\":\"The real calendar: the T-bill market is closed from Saturday 00:00 to Monday 00:00 UTC. It has no owner and no settings, so nobody can change when the weekend happens.\",\"version\":1}},\"settings\":{\"compilationTarget\":{\"project/contracts/MarketCalendar.sol\":\"MarketCalendar\"},\"evmVersion\":\"prague\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[\"project/:@openzeppelin/contracts/=npm/@openzeppelin/contracts@5.7.0/\"]},\"sources\":{\"project/contracts/MarketCalendar.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity ^0.8.20;\\n\\nimport { IMarketCalendar } from \\\"./interfaces/IMarketCalendar.sol\\\";\\n\\n/// @notice The real calendar: the T-bill market is closed from Saturday 00:00 to Monday 00:00 UTC.\\n/// It has no owner and no settings, so nobody can change when the weekend happens.\\ncontract MarketCalendar is IMarketCalendar {\\n    /// @notice 0 = Sunday ... 6 = Saturday. 1 January 1970 was a Thursday (4).\\n    function dayOfWeek(uint256 timestamp) public pure returns (uint256) {\\n        return (timestamp / 1 days + 4) % 7;\\n    }\\n\\n    function isWeekend() public view returns (bool) {\\n        uint256 day = dayOfWeek(block.timestamp);\\n        return day == 0 || day == 6;\\n    }\\n\\n    function isOpen() public view returns (bool) {\\n        return !isWeekend();\\n    }\\n\\n    function secondsUntilOpen() external view returns (uint256) {\\n        uint256 day = dayOfWeek(block.timestamp);\\n        if (day != 0 && day != 6) return 0;\\n        uint256 daysLeft = day == 6 ? 2 : 1;\\n        return daysLeft * 1 days - (block.timestamp % 1 days);\\n    }\\n\\n    function isDemo() external pure returns (bool) {\\n        return false;\\n    }\\n}\\n\",\"keccak256\":\"0xb8f9f084d96b869312a48ff44ca9d68cbb8095207a281b3914a1a8d5bd590fd9\",\"license\":\"MIT\"},\"project/contracts/interfaces/IMarketCalendar.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity ^0.8.20;\\n\\n/// @notice What the fund, the vault and the clearinghouse need to know about the T-bill market.\\ninterface IMarketCalendar {\\n    function isOpen() external view returns (bool);\\n\\n    function isWeekend() external view returns (bool);\\n\\n    /// @notice Seconds until the market opens; 0 when it is open.\\n    function secondsUntilOpen() external view returns (uint256);\\n\\n    /// @notice True for the demo calendar, whose weekend is switched by an operator.\\n    function isDemo() external view returns (bool);\\n}\\n\",\"keccak256\":\"0xbc71aaf780df741647170fa0d031cfb890526991abd93431f0fd4cf30bab33b2\",\"license\":\"MIT\"}},\"version\":1}",
+  "storageLayout": {
+    "storage": [],
+    "types": null
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {
+      "dayOfWeek(uint256)": {
+        "notice": "0 = Sunday ... 6 = Saturday. 1 January 1970 was a Thursday (4)."
+      },
+      "isDemo()": {
+        "notice": "True for the demo calendar, whose weekend is switched by an operator."
+      },
+      "secondsUntilOpen()": {
+        "notice": "Seconds until the market opens; 0 when it is open."
+      }
+    },
+    "notice": "The real calendar: the T-bill market is closed from Saturday 00:00 to Monday 00:00 UTC. It has no owner and no settings, so nobody can change when the weekend happens.",
+    "version": 1
+  },
+  "argsData": "0x",
+  "transaction": {
+    "hash": "0x85f4ad94011c0463185bcd96ec91fa133b4fff680919af43205d681a64a70dfb",
+    "nonce": "0x1",
+    "origin": "0x1a15991f050baac5a5276d2950b8a6f4a776a5b1"
+  },
+  "receipt": {
+    "blockHash": "0xcda07b7e95b10dae68770e131c1766b1cef77c5e719b156feb9bc245fcf76b05",
+    "blockNumber": "0xb77fba",
+    "transactionIndex": "0x20"
+  }
+}
