@@ -82,16 +82,27 @@ async function openTradeOnThursday(s: Story, vaultDeposit = usd(50_000)) {
 }
 
 describe("MarketCalendar", function () {
-  it("treats Saturday and Sunday as closed and counts down to Monday", async function () {
+  it("is closed for 65 hours, from Friday 21:00 to Monday 14:00 UTC", async function () {
     const { calendar } = await networkHelpers.loadFixture(deployFixture);
+    await goToNext(FRIDAY, 20);
+    expect(await calendar.isOpen()).to.equal(true);
     await goToNext(SATURDAY, 12);
     expect(await calendar.isWeekend()).to.equal(true);
-    expect(await calendar.secondsUntilOpen()).to.equal(36n * 3600n);
+    expect(await calendar.secondsUntilOpen()).to.equal(50n * 3600n);
     await goToNext(SUNDAY, 18);
-    expect(await calendar.secondsUntilOpen()).to.equal(6n * 3600n);
-    await goToNext(MONDAY, 0);
+    expect(await calendar.secondsUntilOpen()).to.equal(20n * 3600n);
+    await goToNext(MONDAY, 13);
+    expect(await calendar.isOpen()).to.equal(false);
+    await goToNext(MONDAY, 14);
     expect(await calendar.isOpen()).to.equal(true);
     expect(await calendar.secondsUntilOpen()).to.equal(0n);
+  });
+
+  it("closes exactly at Friday 21:00 UTC, with 65 hours to go", async function () {
+    const { calendar } = await networkHelpers.loadFixture(deployFixture);
+    await goToNext(FRIDAY, 21);
+    expect(await calendar.isOpen()).to.equal(false);
+    expect(await calendar.secondsUntilOpen()).to.equal(65n * 3600n);
   });
 
   it("is the real calendar, not the demo one", async function () {
@@ -135,7 +146,7 @@ describe("SBill", function () {
     await expect(sBill.connect(fundA).subscribe(usd(1_000))).to.be.revertedWithCustomError(sBill, "MarketClosed");
     await expect(sBill.connect(fundA).redeem(ONE)).to.be.revertedWithCustomError(sBill, "MarketClosed");
 
-    await goToNext(MONDAY);
+    await goToNext(MONDAY, 15);
     const shares = await sBill.balanceOf(fundA.address);
     const before = await usdc.balanceOf(fundA.address);
     await sBill.connect(fundA).redeem(shares);
@@ -144,6 +155,44 @@ describe("SBill", function () {
 });
 
 describe("WeekendVault", function () {
+  it("lets only the owner change the discount, within the hard limit, while the market is open", async function () {
+    const { vault, deployer, keeper } = await networkHelpers.loadFixture(deployFixture);
+    await goToNext(THURSDAY);
+    await expect(vault.connect(keeper).setDiscount(20n)).to.be.revertedWithCustomError(
+      vault,
+      "OwnableUnauthorizedAccount",
+    );
+    await expect(vault.connect(deployer).setDiscount(101n))
+      .to.be.revertedWithCustomError(vault, "DiscountTooHigh")
+      .withArgs(101n);
+    await expect(vault.connect(deployer).setDiscount(30n)).to.emit(vault, "DiscountUpdated").withArgs(30n);
+    expect(await vault.discountBps()).to.equal(30n);
+
+    await goToNext(SATURDAY);
+    await expect(vault.connect(deployer).setDiscount(40n)).to.be.revertedWithCustomError(vault, "MarketClosed");
+  });
+
+  it("buys at the new price after the discount changes", async function () {
+    const s = await networkHelpers.loadFixture(deployFixture);
+    await openTradeOnThursday(s);
+    await s.vault.connect(s.deployer).setDiscount(50n);
+    await goToNext(SATURDAY);
+    await s.feed.updateAnswer(feedPrice(84_000));
+    expect(await s.vault.purchasePrice()).to.equal(((await s.sBill.nav()) * 9_950n) / 10_000n);
+    await expect(s.clearinghouse.settle(1)).to.emit(s.vault, "SBillPurchased");
+  });
+
+  it("refuses a starting discount above its hard limit", async function () {
+    const [deployer] = await ethers.getSigners();
+    const usdc = await ethers.deployContract("TestUSDC", [deployer.address]);
+    const calendar = await ethers.deployContract("MarketCalendar");
+    const sBill = await ethers.deployContract("SBill", [usdc, calendar, 400n]);
+    const vaultFactory = await ethers.getContractFactory("WeekendVault");
+    await expect(
+      vaultFactory.deploy(usdc, sBill, calendar, 200n, 100n, deployer.address),
+    ).to.be.revertedWithCustomError(vaultFactory, "DiscountTooHigh");
+  });
+
   it("only sells cash to the clearinghouse, and the link cannot be changed", async function () {
     const { vault, deployer, keeper } = await networkHelpers.loadFixture(deployFixture);
     await expect(vault.connect(keeper).buySBill(ONE)).to.be.revertedWithCustomError(vault, "OnlyClearinghouse");
@@ -178,7 +227,8 @@ describe("Clearinghouse: weekend margin call through the vault", function () {
         }
       })
       .find(parsed => parsed?.name === "SBillPurchased")!;
-    const [usdcPaid, sbillIn, price] = purchase.args;
+    const [usdcPaid, sbillIn, price, discountBps] = purchase.args;
+    expect(discountBps).to.equal(10n);
     expect(usdcPaid).to.equal(usd(4_150));
     expect(sbillIn).to.equal((usd(4_150) * ONE + price - 1n) / price);
 
@@ -193,10 +243,32 @@ describe("Clearinghouse: weekend margin call through the vault", function () {
     expect(await s.vault.maxWithdraw(s.investor.address)).to.equal(usd(50_000 - 4_150));
 
     // Monday: the vault redeems at full NAV and keeps the discount plus two days of interest.
-    await goToNext(MONDAY);
+    await goToNext(MONDAY, 15);
     await expect(s.vault.connect(s.keeper).redeemInventory()).to.emit(s.vault, "InventoryRedeemed");
     expect(await s.vault.inventoryCost()).to.equal(0n);
     expect(await s.vault.totalAssets()).to.be.greaterThan(usd(50_000));
+  });
+
+  it("caps vault withdrawals at its cash while sBILL is waiting for Monday", async function () {
+    const s = await networkHelpers.loadFixture(deployFixture);
+    await openTradeOnThursday(s);
+    await goToNext(SATURDAY);
+    await s.feed.updateAnswer(feedPrice(87_150));
+    await s.clearinghouse.settle(1);
+    await expect(
+      s.vault.connect(s.investor).withdraw(usd(50_000), s.investor.address, s.investor.address),
+    ).to.be.revertedWithCustomError(s.vault, "ERC4626ExceededMaxWithdraw");
+    await s.vault.connect(s.investor).withdraw(usd(45_850), s.investor.address, s.investor.address);
+    expect(await s.vault.cash()).to.equal(0n);
+  });
+
+  it("will not redeem the vault's sBILL until the market reopens", async function () {
+    const s = await networkHelpers.loadFixture(deployFixture);
+    await openTradeOnThursday(s);
+    await goToNext(SATURDAY);
+    await s.feed.updateAnswer(feedPrice(87_150));
+    await s.clearinghouse.settle(1);
+    await expect(s.vault.redeemInventory()).to.be.revertedWithCustomError(s.sBill, "MarketClosed");
   });
 
   it("reverts if the vault does not have enough cash at the weekend", async function () {
@@ -327,12 +399,42 @@ describe("Clearinghouse: funding", function () {
         }
       })
       .find(parsed => parsed?.name === "FundingApplied")!;
-    const [, postedRate, elapsed, longPays] = funding.args;
-    expect(postedRate).to.equal(rate);
-    expect(longPays).to.equal((usd(83_000) * rate * elapsed) / (ONE * 3600n));
+    const [, accrued, , longPays] = funding.args;
+    const postedAt = await s.clearinghouse.fundingUpdatedAt();
+    const settledAt = (await s.clearinghouse.trades(1)).lastSettledAt;
+    expect(accrued).to.equal((rate * (settledAt - postedAt)) / 3600n);
+    expect(longPays).to.equal((usd(83_000) * accrued) / ONE);
     await expect(tx)
       .to.emit(s.clearinghouse, "Settled")
       .withArgs(1, usd(83_000), s.traderB.address, s.fundA.address, longPays, longPays);
+  });
+
+  it("applies a new rate only from the moment it is posted", async function () {
+    const s = await networkHelpers.loadFixture(deployFixture);
+    await openTradeOnThursday(s);
+    // Nothing is settled for 10 hours at a rate of zero, then the owner posts the highest rate allowed.
+    await networkHelpers.time.increase(10 * 3600);
+    await s.clearinghouse.connect(s.deployer).setFundingRate(10n ** 15n);
+    await s.feed.updateAnswer(feedPrice(83_000));
+    await s.clearinghouse.settle(1);
+    const elapsedSincePost =
+      (await s.clearinghouse.trades(1)).lastSettledAt - (await s.clearinghouse.fundingUpdatedAt());
+    // The long pays for the seconds since the post, not for the 10 hours before it.
+    expect((await s.clearinghouse.accounts(s.fundA.address)).usdc).to.equal(
+      (usd(83_000) * ((10n ** 15n * elapsedSincePost) / 3600n)) / ONE,
+    );
+  });
+
+  it("adds up funding across a rate change", async function () {
+    const s = await networkHelpers.loadFixture(deployFixture);
+    await openTradeOnThursday(s);
+    const start = await s.clearinghouse.cumulativeFunding();
+    await s.clearinghouse.connect(s.deployer).setFundingRate(10n ** 14n);
+    const firstPost = await s.clearinghouse.fundingUpdatedAt();
+    await networkHelpers.time.increase(3600);
+    await s.clearinghouse.connect(s.deployer).setFundingRate(-(10n ** 14n));
+    const secondPost = await s.clearinghouse.fundingUpdatedAt();
+    expect(await s.clearinghouse.cumulativeFunding()).to.equal(start + (10n ** 14n * (secondPost - firstPost)) / 3600n);
   });
 
   it("caps the funding rate and only lets the owner post it", async function () {
@@ -362,11 +464,66 @@ describe("Clearinghouse: liquidation", function () {
     expect((await s.clearinghouse.accounts(s.traderB.address)).usdc).to.equal(usd(20_000 + 12_000));
   });
 
+  it("pays the winner and the liquidator through the vault when the market is closed", async function () {
+    const s = await networkHelpers.loadFixture(deployFixture);
+    await openTradeOnThursday(s);
+    await goToNext(SATURDAY);
+    await s.feed.updateAnswer(feedPrice(95_000));
+    const tx = await s.clearinghouse.connect(s.keeper).liquidate(1);
+    await expect(tx).to.emit(s.vault, "SBillPurchased");
+    await expect(tx).to.emit(s.clearinghouse, "Liquidated").withArgs(1, s.fundA.address, s.keeper.address, usd(475));
+    expect((await s.clearinghouse.accounts(s.traderB.address)).usdc).to.equal(usd(32_000));
+    expect(await s.vault.cash()).to.equal(usd(50_000 - 12_000 - 475));
+  });
+
+  it("underpays the winner, instead of reverting, when the loser's deposit runs out", async function () {
+    const s = await networkHelpers.loadFixture(deployFixture);
+    await openTradeOnThursday(s);
+    // BTC doubles: Fund A owes $83,000 and has about $20,000 in sBILL.
+    await s.feed.updateAnswer(feedPrice(166_000));
+    await expect(s.clearinghouse.connect(s.keeper).liquidate(1))
+      .to.emit(s.clearinghouse, "Settled")
+      .withArgs(1, usd(166_000), s.fundA.address, s.traderB.address, usd(83_000), (paid: bigint) => paid < usd(21_000));
+    const fund = await s.clearinghouse.accounts(s.fundA.address);
+    expect(fund.usdc + fund.sbill).to.be.lessThan(ONE);
+  });
+
+  it("matches the formula for the liquidation price", async function () {
+    const s = await networkHelpers.loadFixture(deployFixture);
+    await openTradeOnThursday(s);
+    // Short, weekday sBILL: P = h(D + P0) / (m + h), with D = $20,000, P0 = $83,000, h = 0.99, m = 0.10.
+    const liquidationPrice = Math.ceil((0.99 * (20_000 + 83_000)) / (0.1 + 0.99));
+    await s.feed.updateAnswer(feedPrice(liquidationPrice - 3));
+    await expect(s.clearinghouse.liquidate(1)).to.be.revertedWithCustomError(s.clearinghouse, "NotLiquidatable");
+    await s.feed.updateAnswer(feedPrice(liquidationPrice + 3));
+    await expect(s.clearinghouse.liquidate(1)).to.emit(s.clearinghouse, "Liquidated");
+  });
+
   it("refuses to liquidate a healthy trade", async function () {
     const s = await networkHelpers.loadFixture(deployFixture);
     await openTradeOnThursday(s);
     await s.feed.updateAnswer(feedPrice(84_000));
     await expect(s.clearinghouse.liquidate(1)).to.be.revertedWithCustomError(s.clearinghouse, "NotLiquidatable");
+  });
+});
+
+describe("Clearinghouse: pause", function () {
+  it("stops new deposits and offers, but never settlement, withdrawals or closing", async function () {
+    const s = await networkHelpers.loadFixture(deployFixture);
+    await openTradeOnThursday(s);
+    await expect(s.clearinghouse.connect(s.keeper).pause()).to.be.revertedWithCustomError(
+      s.clearinghouse,
+      "OwnableUnauthorizedAccount",
+    );
+    await s.clearinghouse.connect(s.deployer).pause();
+    await expect(s.clearinghouse.connect(s.traderB).depositUsdc(ONE)).to.be.revertedWithCustomError(
+      s.clearinghouse,
+      "EnforcedPause",
+    );
+    await s.feed.updateAnswer(feedPrice(83_500));
+    await expect(s.clearinghouse.settle(1)).to.emit(s.clearinghouse, "Settled");
+    await s.clearinghouse.connect(s.traderB).withdrawUsdc(ONE);
+    await expect(s.clearinghouse.connect(s.fundA).closeTrade(1)).to.emit(s.clearinghouse, "TradeClosed");
   });
 });
 
@@ -413,7 +570,7 @@ describe("Demo deployment: the weekend path on any day", function () {
     const usdc = await ethers.deployContract("TestUSDC", [deployer.address]);
     const calendar = await ethers.deployContract("DemoCalendar", [deployer.address]);
     const sBill = await ethers.deployContract("SBill", [usdc, calendar, 400n]);
-    const vault = await ethers.deployContract("WeekendVault", [usdc, sBill, calendar, 10n, deployer.address]);
+    const vault = await ethers.deployContract("WeekendVault", [usdc, sBill, calendar, 10n, 100n, deployer.address]);
     const clearinghouse = await ethers.deployContract("Clearinghouse", [
       usdc,
       sBill,

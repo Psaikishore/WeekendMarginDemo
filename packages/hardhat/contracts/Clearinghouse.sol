@@ -7,6 +7,7 @@ import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
+import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import { SignedMath } from "@openzeppelin/contracts/utils/math/SignedMath.sol";
 import { AggregatorV3Interface } from "./interfaces/AggregatorV3Interface.sol";
 import { SBill } from "./SBill.sol";
@@ -48,19 +49,23 @@ contract Clearinghouse is Ownable, Pausable, ReentrancyGuard {
         uint256 offerId;
     }
 
+    /// @dev Packed into one storage slot. See docs/gas.md for what this saves.
     struct Offer {
         address maker;
         bool makerIsLong;
-        uint256 size;
+        uint88 size;
     }
 
+    /// @dev Packed into three storage slots instead of six. See docs/gas.md for what this saves.
     struct Trade {
         address long;
-        address short;
-        uint256 size;
-        uint256 lastPrice;
-        uint256 lastSettledAt;
+        uint40 lastSettledAt;
         bool open;
+        address short;
+        uint96 size;
+        uint128 lastPrice;
+        /// Value of cumulativeFunding() at the last settlement.
+        int128 lastFunding;
     }
 
     uint256 private constant BPS = 10_000;
@@ -82,6 +87,9 @@ contract Clearinghouse is Ownable, Pausable, ReentrancyGuard {
 
     /// @notice Funding per hour as a share of notional, 18 decimals. Positive: longs pay shorts.
     int256 public fundingRatePerHour;
+    /// @dev cumulativeFunding() as of `fundingUpdatedAt`, the last time the rate changed.
+    int256 private fundingAtLastUpdate;
+    uint256 public fundingUpdatedAt;
 
     mapping(address => Account) public accounts;
     mapping(uint256 => Offer) public offers;
@@ -109,7 +117,8 @@ contract Clearinghouse is Ownable, Pausable, ReentrancyGuard {
         uint256 amountPaid
     );
     /// @dev `longPays` is the funding part of the settlement: positive when the long paid the short.
-    event FundingApplied(uint256 indexed tradeId, int256 ratePerHour, uint256 elapsed, int256 longPays);
+    /// `accrued` is the funding per unit of notional since the last settlement, 18 decimals.
+    event FundingApplied(uint256 indexed tradeId, int256 accrued, uint256 elapsed, int256 longPays);
     event FundingRateUpdated(int256 ratePerHour);
     event CollateralConverted(address indexed account, uint256 sbillSold, uint256 usdcRaised, bool viaVault);
     event TradeClosed(uint256 indexed tradeId, uint256 price);
@@ -150,7 +159,9 @@ contract Clearinghouse is Ownable, Pausable, ReentrancyGuard {
             params.weekdayHaircutBps >= BPS ||
             params.weekendHaircutBps >= BPS ||
             params.liquidationRewardBps >= params.maintenanceMarginBps ||
-            params.maxFundingRatePerHour > 1e16
+            params.maxFundingRatePerHour > 1e16 ||
+            // The weekend haircut must always cover the most the vault can charge on a forced sale.
+            vault_.maxDiscountBps() > params.weekendHaircutBps
         ) revert InvalidParams();
         uint8 feedDecimals = priceFeed_.decimals();
         if (feedDecimals > 18) revert InvalidParams();
@@ -169,6 +180,7 @@ contract Clearinghouse is Ownable, Pausable, ReentrancyGuard {
         weekendHaircutBps = params.weekendHaircutBps;
         liquidationRewardBps = params.liquidationRewardBps;
         maxFundingRatePerHour = params.maxFundingRatePerHour;
+        fundingUpdatedAt = block.timestamp;
 
         // The vault pulls sBILL from here when it buys at the weekend.
         IERC20(address(sBill_)).forceApprove(address(vault_), type(uint256).max);
@@ -219,7 +231,7 @@ contract Clearinghouse is Ownable, Pausable, ReentrancyGuard {
         _requireMargin(msg.sender, size, _price(), initialMarginBps);
 
         offerId = nextOfferId++;
-        offers[offerId] = Offer(msg.sender, isLong, size);
+        offers[offerId] = Offer(msg.sender, isLong, SafeCast.toUint88(size));
         a.offerId = offerId;
         emit OfferPosted(offerId, msg.sender, isLong, size);
     }
@@ -251,7 +263,15 @@ contract Clearinghouse is Ownable, Pausable, ReentrancyGuard {
 
         (address long, address short) = o.makerIsLong ? (o.maker, msg.sender) : (msg.sender, o.maker);
         tradeId = nextTradeId++;
-        trades[tradeId] = Trade(long, short, o.size, price, block.timestamp, true);
+        trades[tradeId] = Trade(
+            long,
+            uint40(block.timestamp),
+            true,
+            short,
+            o.size,
+            SafeCast.toUint128(price),
+            SafeCast.toInt128(cumulativeFunding())
+        );
         accounts[long].tradeId = tradeId;
         accounts[short].tradeId = tradeId;
         emit TradeOpened(tradeId, long, short, o.size, price);
@@ -283,10 +303,9 @@ contract Clearinghouse is Ownable, Pausable, ReentrancyGuard {
         _settle(tradeId, t, price);
 
         uint256 maintenance = requiredMargin(t.size, price, maintenanceMarginBps);
-        address account;
-        if (collateralValue(t.long) < maintenance) account = t.long;
-        else if (collateralValue(t.short) < maintenance) account = t.short;
-        else revert NotLiquidatable();
+        bool longIsBelow = collateralValue(t.long) < maintenance;
+        if (!longIsBelow && collateralValue(t.short) >= maintenance) revert NotLiquidatable();
+        address account = longIsBelow ? t.long : t.short;
 
         reward = _collect(account, requiredMargin(t.size, price, liquidationRewardBps));
         _close(tradeId, t, price);
@@ -296,8 +315,11 @@ contract Clearinghouse is Ownable, Pausable, ReentrancyGuard {
 
     // ---------------------------------------------------------------- owner
 
+    /// @notice Posts the funding rate. It applies from now on: time already passed keeps the old rate.
     function setFundingRate(int256 ratePerHour) external onlyOwner {
         if (SignedMath.abs(ratePerHour) > maxFundingRatePerHour) revert FundingRateTooHigh(ratePerHour);
+        fundingAtLastUpdate = cumulativeFunding();
+        fundingUpdatedAt = block.timestamp;
         fundingRatePerHour = ratePerHour;
         emit FundingRateUpdated(ratePerHour);
     }
@@ -315,6 +337,11 @@ contract Clearinghouse is Ownable, Pausable, ReentrancyGuard {
     /// @notice Latest Chainlink BTC/USD price scaled to 18 decimals, after staleness and sign checks.
     function latestPrice() external view returns (uint256) {
         return _price();
+    }
+
+    /// @notice Funding paid per unit of notional since deployment, 18 decimals. Positive: longs have paid.
+    function cumulativeFunding() public view returns (int256) {
+        return fundingAtLastUpdate + (fundingRatePerHour * int256(block.timestamp - fundingUpdatedAt)) / 1 hours;
     }
 
     function haircutBps() public view returns (uint256) {
@@ -364,10 +391,9 @@ contract Clearinghouse is Ownable, Pausable, ReentrancyGuard {
 
     /// @dev The long's gain since the last settlement (price move minus funding), and the funding part.
     function _longGain(Trade storage t, uint256 price) internal view returns (int256 gain, int256 fundingPaid) {
-        int256 priceGain = (int256(t.size) * (int256(price) - int256(t.lastPrice))) / 1e18;
+        int256 priceGain = (int256(uint256(t.size)) * (int256(price) - int256(uint256(t.lastPrice)))) / 1e18;
         int256 notional = int256(Math.mulDiv(t.size, price, 1e18));
-        int256 elapsed = int256(block.timestamp - t.lastSettledAt);
-        fundingPaid = (notional * fundingRatePerHour * elapsed) / (1e18 * 1 hours);
+        fundingPaid = (notional * (cumulativeFunding() - t.lastFunding)) / 1e18;
         gain = priceGain - fundingPaid;
     }
 
@@ -377,12 +403,18 @@ contract Clearinghouse is Ownable, Pausable, ReentrancyGuard {
         (address payer, address receiver) = longGain > 0 ? (t.short, t.long) : (t.long, t.short);
         uint256 amountDue = SignedMath.abs(longGain);
 
+        int256 funding = cumulativeFunding();
+        int256 accrued = funding - t.lastFunding;
+
+        // The trade's own state is updated before any token moves.
+        t.lastPrice = SafeCast.toUint128(price);
+        t.lastFunding = SafeCast.toInt128(funding);
+        t.lastSettledAt = uint40(block.timestamp);
+
         uint256 paid = amountDue == 0 ? 0 : _collect(payer, amountDue);
         accounts[receiver].usdc += paid;
-        t.lastPrice = price;
-        t.lastSettledAt = block.timestamp;
         emit Settled(tradeId, price, payer, receiver, amountDue, paid);
-        if (fundingPaid != 0) emit FundingApplied(tradeId, fundingRatePerHour, elapsed, fundingPaid);
+        if (fundingPaid != 0) emit FundingApplied(tradeId, accrued, elapsed, fundingPaid);
     }
 
     function _close(uint256 tradeId, Trade storage t, uint256 price) internal {

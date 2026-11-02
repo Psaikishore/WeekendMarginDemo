@@ -1,0 +1,13 @@
+{
+  "sBillApyBps": 400,
+  "vaultDiscountBps": 10,
+  "vaultMaxDiscountBps": 100,
+  "fundInterestReserve": 1000000,
+  "maxPriceAgeSeconds": 7200,
+  "initialMarginBps": 2000,
+  "maintenanceMarginBps": 1000,
+  "weekdayHaircutBps": 100,
+  "weekendHaircutBps": 300,
+  "liquidationRewardBps": 50,
+  "maxFundingBpsPerHour": 10
+}

@@ -20,15 +20,19 @@ contract WeekendVault is ERC4626, Ownable {
 
     SBill public immutable sBill;
     IMarketCalendar public immutable calendar;
-    uint256 public immutable discountBps;
+    /// @notice Hard limit on the discount, fixed at deployment. The owner can never go above it.
+    uint256 public immutable maxDiscountBps;
+    /// @notice Discount to NAV the vault pays for sBILL, in basis points.
+    uint256 public discountBps;
 
     /// @notice Set once by the owner after the clearinghouse is deployed; cannot be changed afterwards.
     address public clearinghouse;
     /// @notice tUSDC paid for sBILL that has not been redeemed yet.
     uint256 public inventoryCost;
 
-    event ClearinghouseSet(address clearinghouse);
-    event SBillPurchased(uint256 usdcPaid, uint256 sbillIn, uint256 price);
+    event ClearinghouseSet(address indexed clearinghouse);
+    event DiscountUpdated(uint256 discountBps);
+    event SBillPurchased(uint256 usdcPaid, uint256 sbillIn, uint256 price, uint256 discountBps);
     event InventoryRedeemed(uint256 sbillRedeemed, uint256 usdcReceived, uint256 profit);
 
     error OnlyClearinghouse();
@@ -36,23 +40,37 @@ contract WeekendVault is ERC4626, Ownable {
     error MarketOpen();
     error InsufficientLiquidity(uint256 available, uint256 needed);
     error NothingToRedeem();
+    error DiscountTooHigh(uint256 discountBps);
+    error MarketClosed();
 
     constructor(
         IERC20 usdc_,
         SBill sBill_,
         IMarketCalendar calendar_,
         uint256 discountBps_,
+        uint256 maxDiscountBps_,
         address owner_
     ) ERC20("Weekend Vault Share", "wvUSDC") ERC4626(usdc_) Ownable(owner_) {
+        if (discountBps_ > maxDiscountBps_ || maxDiscountBps_ >= 10_000) revert DiscountTooHigh(discountBps_);
         sBill = sBill_;
         calendar = calendar_;
         discountBps = discountBps_;
+        maxDiscountBps = maxDiscountBps_;
     }
 
     function setClearinghouse(address clearinghouse_) external onlyOwner {
         if (clearinghouse != address(0)) revert ClearinghouseAlreadySet();
         clearinghouse = clearinghouse_;
         emit ClearinghouseSet(clearinghouse_);
+    }
+
+    /// @notice Sets the discount within the hard limit. Only while the market is open, so that a fund
+    /// holding sBILL over a weekend knows the price it could be sold at before the market closes.
+    function setDiscount(uint256 discountBps_) external onlyOwner {
+        if (discountBps_ > maxDiscountBps) revert DiscountTooHigh(discountBps_);
+        if (!calendar.isOpen()) revert MarketClosed();
+        discountBps = discountBps_;
+        emit DiscountUpdated(discountBps_);
     }
 
     function cash() public view returns (uint256) {
@@ -63,12 +81,12 @@ contract WeekendVault is ERC4626, Ownable {
         return cash() + inventoryCost;
     }
 
-    function maxWithdraw(address owner) public view override returns (uint256) {
-        return Math.min(super.maxWithdraw(owner), cash());
+    function maxWithdraw(address holder) public view override returns (uint256) {
+        return Math.min(super.maxWithdraw(holder), cash());
     }
 
-    function maxRedeem(address owner) public view override returns (uint256) {
-        return Math.min(super.maxRedeem(owner), _convertToShares(cash(), Math.Rounding.Floor));
+    function maxRedeem(address holder) public view override returns (uint256) {
+        return Math.min(super.maxRedeem(holder), _convertToShares(cash(), Math.Rounding.Floor));
     }
 
     /// @notice tUSDC the vault pays per sBILL: NAV minus the weekend discount.
@@ -99,7 +117,7 @@ contract WeekendVault is ERC4626, Ownable {
 
         IERC20(address(sBill)).safeTransferFrom(msg.sender, address(this), sbillIn);
         IERC20(asset()).safeTransfer(msg.sender, usdcOut);
-        emit SBillPurchased(usdcOut, sbillIn, price);
+        emit SBillPurchased(usdcOut, sbillIn, price, discountBps);
     }
 
     /// @notice Redeems all sBILL inventory with the fund. Anyone can call it; it only works on business days.
