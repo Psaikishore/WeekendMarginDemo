@@ -2,7 +2,7 @@
 
 Owner: Swastik. Due with the project: Wed Nov 4, 11:59pm ET.
 
-**Status, Oct 30:** a first draft of everything below is built in [analysis.ipynb](analysis.ipynb). The data sources are tested and the data is saved in `docs/data/`. This guide stays as the plan and the formulas; the notebook has the results. What's left: review the assumptions, and re-run Section F after the Sepolia demo.
+**Status, Nov 1:** a first draft of everything below is built in [analysis.ipynb](analysis.ipynb). The data sources are tested and the data is saved in `docs/data/`. Every assumption is in [config/assumptions.json](../config/README.md), and the app's Economics page lets you try different values. The final contracts are live, and Section F matches all 28 numbers on Sepolia to the wei. This guide stays as the plan and the formulas; the notebook has the results. What's left: review the assumptions, replace the go-to-market placeholders, and write up the results.
 
 **Goal:** answer two questions with numbers.
 
@@ -18,7 +18,7 @@ The rubric rewards correct formulas, stated assumptions, sensitivity tests and m
 
 ## 1. Contract settings to use
 
-These come from `packages/hardhat/deploy/00_deploy_weekend_margin.ts`. If they change, the contract values win.
+These come from `config/protocol.json`, which the deploy script reads. If they change, the contract values win.
 
 | Setting | Value |
 |---|---|
@@ -26,13 +26,13 @@ These come from `packages/hardhat/deploy/00_deploy_weekend_margin.ts`. If they c
 | Maintenance margin | 10% of notional |
 | sBILL haircut | 1% weekdays, 3% weekends |
 | sBILL interest | 4% a year, simple |
-| Vault discount | 0.10% below NAV |
+| Vault discount | 0.10% below NAV. The owner can change it, up to 1%, while the market is open |
 | Liquidation reward | 0.5% of notional |
 | Funding rate cap | 0.1% per hour |
 | Oldest accepted price | 2 hours |
 | Demo positions | 1 BTC; 30,000 margin per account; 50,000 tUSDC in the vault |
 
-The weekend in the contract is Saturday 00:00 to Monday 00:00 UTC (48 hours). A real market closure, Friday 4pm to Monday 9:30am ET, is about 65 hours. Use 65 hours for the economics, and state this difference in the report.
+The closure in the contract is Friday 21:00 to Monday 14:00 UTC, which is 65 hours: Friday 4pm to Monday 9am New York time in winter. The analysis uses the same 65 hours. State in the report that the contract's times don't move for daylight saving, and that it has no holidays.
 
 ## 2. Data
 
@@ -121,7 +121,8 @@ The brief requires at least one model number to match a deployed contract. The n
 ```text
 nav             = 1 + 0.04 x seconds since deployment / (365 x 86400)
 amount due      = size x |price - last price| (plus or minus funding)
-funding         = notional x hourly rate x elapsed seconds / 3600
+funding         = notional x change in cumulative funding since the last settlement
+                  (each rate only applies from the moment it was posted)
 vault price     = nav x 0.999
 sBILL sold      = amount paid / vault price (rounded up)
 ```
@@ -131,19 +132,19 @@ Contracts use whole-number maths with 18 decimals, so use Python integers (not f
 - `Settled`, `FundingApplied` and `CollateralConverted` on the clearinghouse;
 - `SBillPurchased` and `InventoryRedeemed` on the vault.
 
-Transaction hashes are in `packages/hardhat/demo-log.sepolia-demo.json`. Show model value, on-chain value and difference in a table, with the Etherscan link for each.
+Transaction hashes are in `packages/hardhat/demo-log.sepolia-demo.json` and `demo-log.sepolia-stress.json`. Show model value, on-chain value and difference in a table, with the Etherscan link for each.
 
 ## 4. Limits to state in the report
 
 - sBILL is a mock: it has a fixed 4% rate, no T-bill price risk on-chain, and pays interest from a pre-funded reserve.
-- Funding is posted by the owner within a cap, not set by a market.
+- Funding is posted by the owner within a cap, not set by a market. A new rate only applies from the moment it is posted.
 - There is no insurance fund, so a loss beyond a deposit underpays the winner.
-- Positions are simple: one market, one position per account, full liquidation only.
+- Positions are simple: one market, one position per account, full liquidation only. Either side can close a trade, which ends the other side's hedge.
 - Real tokenized funds restrict who can hold them (the risks section will cover BUIDL and BENJI).
 
 ## 5. Suggested order
 
 1. Download the data and do A and B. They don't need anything deployed.
 2. Do C, then D and E.
-3. Do F once Sepolia transactions exist.
+3. F is done, and it re-runs with the notebook. It needs an internet connection but no keys. Section G holds the going-to-market numbers.
 4. Write Section 4 of the report and send the charts to Sai.

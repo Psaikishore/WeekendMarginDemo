@@ -2,6 +2,8 @@
 
 This file provides guidance to coding agents working in this repository.
 
+**Working on this project? Read [CLAUDE.md](CLAUDE.md) first.** It has the current status, what's left and who owns it, the live Sepolia results, and the rules. The most important rules: the contracts are frozen because the code must match what's deployed, agents don't send Sepolia transactions, and nobody commits or pushes unless asked. The rest of this file covers the Scaffold-ETH 2 toolchain.
+
 ## Project Overview
 
 Scaffold-ETH 2 (SE-2) is a starter kit for building dApps on Ethereum. It comes in **two flavors** based on the Solidity framework:
