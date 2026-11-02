@@ -30,7 +30,8 @@ async function main() {
   const subcommands = ["etherscan", "sourcify", "blockscout", "metadata"];
   const hasSubcommand = forwarded.some(a => subcommands.includes(a));
 
-  const verifyArgs = ["-e", network, ...(hasSubcommand ? [] : ["etherscan"]), ...forwarded];
+  // Etherscan allows 3 calls a second, and the tool has no limit of its own.
+  const verifyArgs = ["-e", network, ...(hasSubcommand ? [] : ["etherscan", "--min-interval", "1000"]), ...forwarded];
 
   const env = { ...process.env };
   const userKey = process.env.ETHERSCAN_API_KEY;

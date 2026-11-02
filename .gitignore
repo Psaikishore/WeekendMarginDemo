@@ -26,3 +26,7 @@ dist
 .venv
 .ipynb_checkpoints
 __pycache__
+
+# local rehearsals on `yarn chain`
+packages/hardhat/deployments/default
+packages/hardhat/demo-log.default-*.json

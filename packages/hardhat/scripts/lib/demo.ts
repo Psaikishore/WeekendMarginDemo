@@ -1,5 +1,5 @@
 import { appendFileSync, existsSync, readFileSync, writeFileSync } from "fs";
-import { HDNodeWallet, Wallet, type Provider } from "ethers";
+import { HDNodeWallet, Wallet, parseEther, type Provider, type Signer } from "ethers";
 
 export const DEMO_ROLES = ["Fund A", "Trader B", "Fund C", "Trader D"] as const;
 
@@ -44,4 +44,33 @@ export function logTx(networkName: string, step: string, hash: string) {
   entries.push({ time: new Date().toISOString(), step, hash });
   writeFileSync(file, JSON.stringify(entries, null, 2) + "\n");
   console.log(`  ${step}: ${hash}`);
+}
+
+const GAS_TOP_UP = parseEther("0.001");
+const FALLBACK_FUNDING_PER_HOUR = 125n * 10n ** 11n; // 0.01% per 8 hours
+
+/** Sends a little ETH to any demo wallet that is running low, so it can pay for its own transactions. */
+export async function topUpGas(networkName: string, funder: Signer, wallets: HDNodeWallet[]) {
+  const provider = funder.provider!;
+  for (const [i, wallet] of wallets.entries()) {
+    if ((await provider.getBalance(wallet.address)) >= GAS_TOP_UP / 2n) continue;
+    const tx = await funder.sendTransaction({ to: wallet.address, value: GAS_TOP_UP });
+    await tx.wait();
+    logTx(networkName, `gas top-up for ${DEMO_ROLES[i]}`, tx.hash);
+  }
+}
+
+/**
+ * Hourly funding rate, 18 decimals: Deribit BTC-PERPETUAL 8-hour funding divided by 8, or 0.00125% per
+ * hour if Deribit cannot be reached. (BitMEX's API blocks US connections.)
+ */
+export async function deribitFundingPerHour(): Promise<bigint> {
+  try {
+    const res = await fetch("https://www.deribit.com/api/v2/public/ticker?instrument_name=BTC-PERPETUAL");
+    const { result } = (await res.json()) as { result: { funding_8h: number } };
+    return BigInt(Math.round((result.funding_8h / 8) * 1e18));
+  } catch {
+    console.log("  Deribit unreachable, using the fallback funding rate");
+    return FALLBACK_FUNDING_PER_HOUR;
+  }
 }

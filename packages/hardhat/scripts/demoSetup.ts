@@ -1,6 +1,6 @@
 import { network } from "hardhat";
-import { parseEther, type ContractTransactionResponse } from "ethers";
-import { demoWallets, deploymentAddress, logTx } from "./lib/demo.js";
+import { type ContractTransactionResponse, type Signer } from "ethers";
+import { demoWallets, deploymentAddress, logTx, topUpGas } from "./lib/demo.js";
 
 /**
  * Prepares the live demo on a deployed system. Run it on a business day, before the weekend:
@@ -12,21 +12,18 @@ import { demoWallets, deploymentAddress, logTx } from "./lib/demo.js";
  * to go through the vault. Every step is skipped if it was already done, so it is safe to re-run.
  */
 const ONE = 10n ** 18n;
-const GAS_TOP_UP = parseEther("0.001");
 const VAULT_DEPOSIT = 50_000n * ONE;
 const MARGIN = 30_000n * ONE;
 const SIZE = BigInt(Math.round(Number(process.env.DEMO_SIZE_BTC ?? "1") * 1e6)) * 10n ** 12n;
 
 const { ethers, networkName } = await network.create();
 const [deployer] = await ethers.getSigners();
-const at = <T extends "TestUSDC" | "SBill" | "WeekendVault" | "Clearinghouse" | "MarketCalendar">(name: T) =>
-  ethers.getContractAt(name, deploymentAddress(networkName, name));
-
-const usdc = await at("TestUSDC");
-const sBill = await at("SBill");
-const vault = await at("WeekendVault");
-const clearinghouse = await at("Clearinghouse");
-const calendar = await at("MarketCalendar");
+const address = (name: string) => deploymentAddress(networkName, name);
+const usdc = await ethers.getContractAt("TestUSDC", address("TestUSDC"));
+const sBill = await ethers.getContractAt("SBill", address("SBill"));
+const vault = await ethers.getContractAt("WeekendVault", address("WeekendVault"));
+const clearinghouse = await ethers.getContractAt("Clearinghouse", address("Clearinghouse"));
+const calendar = await ethers.getContractAt("MarketCalendar", address("MarketCalendar"));
 
 if (!(await calendar.isOpen())) {
   throw new Error(
@@ -41,30 +38,20 @@ async function send(step: string, tx: Promise<ContractTransactionResponse>) {
   logTx(networkName, step, response.hash);
 }
 
-async function faucetIfNeeded(who: Parameters<typeof usdc.connect>[0], amount: bigint, step: string) {
+async function faucetIfNeeded(who: Signer, amount: bigint, step: string) {
   const address = await who.getAddress();
   if ((await usdc.balanceOf(address)) < amount) await send(step, usdc.connect(who).faucet());
 }
 
-const [fundA, traderB, fundC, traderD] = demoWallets(ethers.provider);
+const wallets = demoWallets(ethers.provider);
+const [fundA, traderB, fundC, traderD] = wallets;
 console.log(`Network ${networkName}, deployer ${deployer.address}`);
 console.log(
   `Fund A ${fundA.address}\nTrader B ${traderB.address}\nFund C ${fundC.address}\nTrader D ${traderD.address}`,
 );
 
 // 1. Gas for the demo wallets.
-for (const [role, wallet] of [
-  ["Fund A", fundA],
-  ["Trader B", traderB],
-  ["Fund C", fundC],
-  ["Trader D", traderD],
-] as const) {
-  if ((await ethers.provider.getBalance(wallet.address)) < GAS_TOP_UP / 2n) {
-    const tx = await deployer.sendTransaction({ to: wallet.address, value: GAS_TOP_UP });
-    await tx.wait();
-    logTx(networkName, `gas top-up for ${role}`, tx.hash);
-  }
-}
+await topUpGas(networkName, deployer, wallets);
 
 // 2. The deployer acts as the vault investor.
 if ((await vault.totalAssets()) < VAULT_DEPOSIT) {

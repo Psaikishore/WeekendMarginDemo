@@ -1,30 +1,27 @@
 import { network } from "hardhat";
 import { type ContractTransactionResponse } from "ethers";
-import { deploymentAddress, logTx } from "./lib/demo.js";
+import { deribitFundingPerHour, deploymentAddress, logTx } from "./lib/demo.js";
 
 /**
  * Off-chain keeper. Every KEEPER_INTERVAL_MIN minutes (default 10) it:
  *   - liquidates any trade where one side is below maintenance margin,
  *   - settles each open trade not settled for SETTLE_EVERY_MIN minutes (default 55),
  *   - redeems the vault's sBILL inventory once the T-bill market is open again,
- *   - every 8 hours posts the funding rate: Deribit BTC-PERPETUAL 8-hour funding divided by 8,
- *     or 0.00125% per hour if Deribit cannot be reached. (BitMEX's API blocks US connections.)
+ *   - every 8 hours posts the funding rate from Deribit (see lib/demo.ts). It only applies from then on.
  * KEEPER_ONCE=1 runs a single pass. Every transaction is logged to demo-log.<network>.json.
  */
 const ONE = 10n ** 18n;
 const INTERVAL_MS = Number(process.env.KEEPER_INTERVAL_MIN ?? "10") * 60_000;
 const SETTLE_EVERY_S = BigInt(Number(process.env.SETTLE_EVERY_MIN ?? "55") * 60);
 const FUNDING_EVERY_MS = 8 * 3600_000;
-const FALLBACK_FUNDING_PER_HOUR = 125n * 10n ** 11n; // 0.01% per 8 hours
 
 const { ethers, networkName } = await network.create();
 const [keeper] = await ethers.getSigners();
-const at = <T extends "SBill" | "WeekendVault" | "Clearinghouse" | "MarketCalendar">(name: T) =>
-  ethers.getContractAt(name, deploymentAddress(networkName, name));
-const sBill = await at("SBill");
-const vault = await at("WeekendVault");
-const clearinghouse = await at("Clearinghouse");
-const calendar = await at("MarketCalendar");
+const address = (name: string) => deploymentAddress(networkName, name);
+const sBill = await ethers.getContractAt("SBill", address("SBill"));
+const vault = await ethers.getContractAt("WeekendVault", address("WeekendVault"));
+const clearinghouse = await ethers.getContractAt("Clearinghouse", address("Clearinghouse"));
+const calendar = await ethers.getContractAt("MarketCalendar", address("MarketCalendar"));
 
 let lastFundingPost = 0;
 
@@ -35,17 +32,6 @@ async function send(step: string, tx: Promise<ContractTransactionResponse>) {
     logTx(networkName, step, response.hash);
   } catch (e) {
     console.log(`  ${step} failed: ${(e as Error).message.split("\n")[0]}`);
-  }
-}
-
-async function deribitFundingPerHour(): Promise<bigint> {
-  try {
-    const res = await fetch("https://www.deribit.com/api/v2/public/ticker?instrument_name=BTC-PERPETUAL");
-    const { result } = (await res.json()) as { result: { funding_8h: number } };
-    return BigInt(Math.round((result.funding_8h / 8) * 1e18));
-  } catch {
-    console.log("  Deribit unreachable, using the fallback funding rate");
-    return FALLBACK_FUNDING_PER_HOUR;
   }
 }
 
@@ -101,6 +87,5 @@ async function pass() {
 
 console.log(`Keeper ${keeper.address} on ${networkName}`);
 await pass();
-if (process.env.KEEPER_ONCE !== "1") {
-  setInterval(() => pass().catch(e => console.log(`pass failed: ${(e as Error).message}`)), INTERVAL_MS);
-}
+if (process.env.KEEPER_ONCE === "1") process.exit(0);
+setInterval(() => pass().catch(e => console.log(`pass failed: ${(e as Error).message}`)), INTERVAL_MS);
