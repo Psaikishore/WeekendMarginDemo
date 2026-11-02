@@ -1,0 +1,37 @@
+{
+  "dataThrough": "2026-10-30",
+  "tBillYield": 0.0401,
+  "weekendsInSample": 304,
+  "closureMove99Up": 0.13470682460947508,
+  "closureMove99Down": 0.14416114024283444,
+  "worstClosureMove": 0.20411056917639003,
+  "soldPerNotionalPerYear": 1.301320312335707,
+  "vaultCashPerNotional": {
+    "shortsOnly": 0.13470682460947508,
+    "bothDirections": 0.19689645095244082
+  },
+  "vaultUsage": {
+    "shortsOnly": 0.1828811947438294,
+    "bothDirections": 0.2461491103718607
+  },
+  "yieldShock": {
+    "low": 0.0010000000000000022,
+    "base": 0.001803999999999996,
+    "stress": 0.003499999999999998
+  },
+  "requiredDiscount": {
+    "low": 0.0001311942395170708,
+    "base": 0.0006567463997190015,
+    "stress": 0.0013175746399718999
+  },
+  "fundLimit": {
+    "againstAllCash": 0.01187414599791039,
+    "againstCashBuffer": 0.004150971606017966,
+    "againstFridaySwap": 0.0016060306808998082
+  },
+  "vaultNeeds": {
+    "shortsOnly": 0.006022236054046865,
+    "bothDirections": 0.004397857173291452,
+    "bothDirectionsToMatchTBills": 0.002835327111596973
+  }
+}

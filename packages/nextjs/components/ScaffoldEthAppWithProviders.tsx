@@ -10,6 +10,8 @@ import { WagmiProvider } from "wagmi";
 import { Footer } from "~~/components/Footer";
 import { Header } from "~~/components/Header";
 import { BlockieAvatar } from "~~/components/scaffold-eth";
+import { DeploymentBar } from "~~/components/weekend/DeploymentBar";
+import { DeploymentProvider } from "~~/components/weekend/DeploymentProvider";
 import { wagmiConfig } from "~~/services/web3/wagmiConfig";
 
 const ScaffoldEthApp = ({ children }: { children: React.ReactNode }) => {
@@ -17,6 +19,7 @@ const ScaffoldEthApp = ({ children }: { children: React.ReactNode }) => {
     <>
       <div className={`flex flex-col min-h-screen `}>
         <Header />
+        <DeploymentBar />
         <main className="relative flex flex-col flex-1">{children}</main>
         <Footer />
       </div>
@@ -50,7 +53,9 @@ export const ScaffoldEthAppWithProviders = ({ children }: { children: React.Reac
           theme={mounted ? (isDarkMode ? darkTheme() : lightTheme()) : lightTheme()}
         >
           <ProgressBar height="3px" color="#2299dd" />
-          <ScaffoldEthApp>{children}</ScaffoldEthApp>
+          <DeploymentProvider>
+            <ScaffoldEthApp>{children}</ScaffoldEthApp>
+          </DeploymentProvider>
         </RainbowKitProvider>
       </QueryClientProvider>
     </WagmiProvider>

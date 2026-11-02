@@ -16,26 +16,30 @@
 @plugin "daisyui/theme" {
   name: "light";
 
-  --color-primary: #93bbfb;
-  --color-primary-content: #212638;
-  --color-secondary: #dae8ff;
-  --color-secondary-content: #212638;
-  --color-accent: #93bbfb;
-  --color-accent-content: #212638;
-  --color-neutral: #212638;
+  --color-primary: #0f4c81;
+  --color-primary-content: #ffffff;
+  --color-secondary: #e6eef6;
+  --color-secondary-content: #12263a;
+  --color-accent: #0f766e;
+  --color-accent-content: #ffffff;
+  --color-neutral: #12263a;
   --color-neutral-content: #ffffff;
   --color-base-100: #ffffff;
-  --color-base-200: #f4f8ff;
-  --color-base-300: #dae8ff;
-  --color-base-content: #212638;
-  --color-info: #93bbfb;
-  --color-success: #34eeb6;
-  --color-warning: #ffcf72;
-  --color-error: #ff8863;
+  --color-base-200: #f5f7fa;
+  --color-base-300: #e3e8ef;
+  --color-base-content: #12263a;
+  --color-info: #2563eb;
+  --color-info-content: #ffffff;
+  --color-success: #15803d;
+  --color-success-content: #ffffff;
+  --color-warning: #b45309;
+  --color-warning-content: #ffffff;
+  --color-error: #b91c1c;
+  --color-error-content: #ffffff;
 
-  --radius-field: 0rem;
-  --radius-box: 0rem;
-  --radius-selector: 0rem;
+  --radius-field: 0.5rem;
+  --radius-box: 0.75rem;
+  --radius-selector: 0.5rem;
 
   --tt-tailw: 6px;
 }
@@ -43,26 +47,30 @@
 @plugin "daisyui/theme" {
   name: "dark";
 
-  --color-primary: #212638;
-  --color-primary-content: #f9fbff;
-  --color-secondary: #323f61;
-  --color-secondary-content: #f9fbff;
-  --color-accent: #4969a6;
-  --color-accent-content: #f9fbff;
-  --color-neutral: #f9fbff;
-  --color-neutral-content: #385183;
-  --color-base-100: #385183;
-  --color-base-200: #2a3655;
-  --color-base-300: #212638;
-  --color-base-content: #f9fbff;
-  --color-info: #385183;
-  --color-success: #34eeb6;
-  --color-warning: #ffcf72;
-  --color-error: #ff8863;
+  --color-primary: #60a5fa;
+  --color-primary-content: #0b1220;
+  --color-secondary: #1e2a3a;
+  --color-secondary-content: #e5edf5;
+  --color-accent: #2dd4bf;
+  --color-accent-content: #0b1220;
+  --color-neutral: #e5edf5;
+  --color-neutral-content: #12263a;
+  --color-base-100: #131c28;
+  --color-base-200: #0d141e;
+  --color-base-300: #223042;
+  --color-base-content: #e5edf5;
+  --color-info: #60a5fa;
+  --color-info-content: #0b1220;
+  --color-success: #4ade80;
+  --color-success-content: #0b1220;
+  --color-warning: #fbbf24;
+  --color-warning-content: #0b1220;
+  --color-error: #f87171;
+  --color-error-content: #0b1220;
 
-  --radius-field: 0rem;
-  --radius-box: 0rem;
-  --radius-selector: 0rem;
+  --radius-field: 0.5rem;
+  --radius-box: 0.75rem;
+  --radius-selector: 0.5rem;
 
   --tt-tailw: 6px;
   --tt-bg: var(--color-primary);

@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useRef } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { hardhat } from "viem/chains";
@@ -16,12 +15,14 @@ type HeaderMenuLink = {
 };
 
 export const menuLinks: HeaderMenuLink[] = [
+  { label: "Overview", href: "/" },
+  { label: "Margin", href: "/margin" },
+  { label: "Trade", href: "/trade" },
+  { label: "Vault", href: "/vault" },
+  { label: "Controls", href: "/controls" },
+  { label: "Economics", href: "/economics" },
   {
-    label: "Home",
-    href: "/",
-  },
-  {
-    label: "Debug Contracts",
+    label: "Debug",
     href: "/debug",
     icon: <BugAntIcon className="h-4 w-4" />,
   },
@@ -41,7 +42,7 @@ export const HeaderMenuLinks = () => {
               passHref
               className={`${
                 isActive ? "bg-base-300" : ""
-              } hover:bg-base-300 focus:!bg-base-300 h-full px-4 text-sm gap-2 flex items-center whitespace-nowrap`}
+              } hover:bg-base-300 focus:!bg-base-300 h-full px-3 text-sm gap-2 flex items-center whitespace-nowrap`}
             >
               {icon}
               <span>{label}</span>
@@ -81,13 +82,10 @@ export const Header = () => {
             <HeaderMenuLinks />
           </ul>
         </details>
-        <Link href="/" passHref className="hidden lg:flex items-center gap-2 ml-4 mr-6 shrink-0">
-          <div className="flex relative w-10 h-10">
-            <Image alt="SE2 logo" className="cursor-pointer" fill src="/logo.svg" />
-          </div>
+        <Link href="/" passHref className="hidden lg:flex items-center gap-2 ml-4 mr-2 shrink-0">
           <div className="flex flex-col">
-            <span className="font-bold leading-tight">Scaffold-ETH</span>
-            <span className="text-xs">Ethereum dev stack</span>
+            <span className="font-bold leading-tight">Weekend Margin</span>
+            <span className="hidden text-xs text-base-content/60 2xl:block">T-bill margin that works on Saturday</span>
           </div>
         </Link>
         <ul className="hidden lg:flex lg:flex-nowrap h-full m-0 p-0 list-none">

@@ -1,0 +1,41 @@
+{
+  "demoPosition": {
+    "entryPrice": 77853.66,
+    "marginUsd": 30000,
+    "vaultCashUsd": 50000
+  },
+  "market": {
+    "closureHours": 65,
+    "overnightHours": 17,
+    "weekendsPerYear": 52,
+    "holdDays": 30
+  },
+  "vaultInvestor": {
+    "hurdlePremium": 0.02,
+    "longWeekendsPerYear": 9,
+    "longWeekendExtraHours": 24,
+    "fundGatesOncePerYears": 20,
+    "gateLoss": 0.03,
+    "cases": {
+      "low": { "hurdlePremium": 0, "tBillDurationYears": 0.0833333333, "yieldShockPercentile": 0.95 },
+      "base": { "hurdlePremium": 0.02, "tBillDurationYears": 0.25, "yieldShockPercentile": 0.99 },
+      "stress": { "hurdlePremium": 0.05, "tBillDurationYears": 0.25, "yieldShockPercentile": 1 }
+    }
+  },
+  "fund": {
+    "hedgeNotionalUsd": 1000000
+  },
+  "goToMarket": {
+    "hedgeNotionalUsd": 100000000,
+    "productDiscountBps": 35,
+    "protocolShareOfDiscount": 0.2,
+    "clearingFeeBpsPerSide": 1,
+    "turnsPerYear": 12,
+    "runningCostsUsd": {
+      "infrastructureAndKeepers": 24000,
+      "securityAudits": 60000,
+      "legalAndCompliance": 120000,
+      "team": 300000
+    }
+  }
+}
