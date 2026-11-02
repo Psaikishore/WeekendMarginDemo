@@ -1,5 +1,5 @@
 {
-  "address": "0x04cac5d9bbac0371a8f90cee53c1177980d5b7b8",
+  "address": "0x47262f3f13b4ce7d321ffee44549e2ca6bf6dce1",
   "abi": [
     {
       "inputs": [
@@ -810,15 +810,15 @@
     "notice": "Our project token: a mock tokenized T-bill fund share (sBILL). Investors buy shares with tUSDC and redeem them at NAV, but only while the market is open. NAV accrues at a fixed annual rate set at deployment, so no one posts prices for it. The fund pays interest out of a tUSDC reserve funded at deployment.",
     "version": 1
   },
-  "argsData": "0x0000000000000000000000006e558d2e5272e54674bcae5f7b21af8c90c42499000000000000000000000000c130421bf0d52a45502a4aaea8d2983f325120310000000000000000000000000000000000000000000000000000000000000190",
+  "argsData": "0x000000000000000000000000aa171e5d4c32c015919746825a9dc7db5345816e000000000000000000000000553dfffb3022be731faed4f37f94e519ee207b3d0000000000000000000000000000000000000000000000000000000000000190",
   "transaction": {
-    "hash": "0x34bf862c5ae49bda5000df075d40994eacd46be80b520e1c9794a3d528b1676f",
-    "nonce": "0x2",
+    "hash": "0x03fa0d481289163ca7d6afdf2a222921aa9427aa746c79820029fe1451cf4e16",
+    "nonce": "0x17",
     "origin": "0x1a15991f050baac5a5276d2950b8a6f4a776a5b1"
   },
   "receipt": {
-    "blockHash": "0xc2ba05286bf8182362b5ab996d230befc23c0caf676069d4b1a00a86357d9c50",
-    "blockNumber": "0xb77fbb",
-    "transactionIndex": "0x8"
+    "blockHash": "0xc86a4f7162d0c0bc4ff277db3a2cd018eebbd71b2bf454bc6ba82076a82821e8",
+    "blockNumber": "0xb7ca4e",
+    "transactionIndex": "0x19"
   }
 }

@@ -1,0 +1,177 @@
+{
+  "team": "Team 9",
+  "members": [
+    {
+      "name": "Sai Kishore",
+      "netid": "sp8744"
+    },
+    {
+      "name": "Swastik Mishra",
+      "netid": "sgm9198"
+    }
+  ],
+  "topic": "Hedging with perpetual swaps",
+  "repository": "https://github.com/Psaikishore/WeekendMarginDemo",
+  "tag": "final",
+  "network": "sepolia",
+  "token": {
+    "standard": "ERC-20",
+    "name": "Tokenized T-Bill Share (sBILL)",
+    "address": "0x2aff94631070707436ef712c4a6e77ecaf4c6720"
+  },
+  "contracts": [
+    {
+      "name": "TestUSDC",
+      "address": "0xaa171e5d4c32c015919746825a9dc7db5345816e",
+      "role": "Main set: test stablecoin for margin and payments, with a faucet"
+    },
+    {
+      "name": "SBill",
+      "address": "0x47262f3f13b4ce7d321ffee44549e2ca6bf6dce1",
+      "role": "Main set: our token: a mock tokenized T-bill share (ERC-20) whose NAV grows at a fixed rate"
+    },
+    {
+      "name": "MarketCalendar",
+      "address": "0x553dfffb3022be731faed4f37f94e519ee207b3d",
+      "role": "Main set: says whether the T-bill market is open; nobody can change it"
+    },
+    {
+      "name": "WeekendVault",
+      "address": "0xe3285b5999bc52d01904376fe17ca41cb3c49334",
+      "role": "Main set: ERC-4626 pool of tUSDC that buys sBILL at a discount while the market is closed"
+    },
+    {
+      "name": "Clearinghouse",
+      "address": "0x57073f0c313c0edf42a03350ca71cf2b0e734113",
+      "role": "Main set: holds margin, opens trades, settles price moves and funding, and liquidates"
+    },
+    {
+      "name": "DemoTestUSDC",
+      "address": "0xfa56765d9124f42ab3b6c6bc648f3dd94a7e3de0",
+      "role": "Demo set: test stablecoin for margin and payments, with a faucet"
+    },
+    {
+      "name": "DemoSBill",
+      "address": "0x2aff94631070707436ef712c4a6e77ecaf4c6720",
+      "role": "Demo set: our token: a mock tokenized T-bill share (ERC-20) whose NAV grows at a fixed rate"
+    },
+    {
+      "name": "DemoMarketCalendar",
+      "address": "0x03dd285f95b8e3dbd5e23149453699ce93968792",
+      "role": "Demo set: says whether the T-bill market is open; the owner can switch the weekend on and off"
+    },
+    {
+      "name": "DemoWeekendVault",
+      "address": "0xadaea677da9e6c0a145b7458f009b9276addedba",
+      "role": "Demo set: ERC-4626 pool of tUSDC that buys sBILL at a discount while the market is closed"
+    },
+    {
+      "name": "DemoClearinghouse",
+      "address": "0xb6c1f1fd62e393aa2bcdd31d07736daee247f906",
+      "role": "Demo set: holds margin, opens trades, settles price moves and funding, and liquidates"
+    },
+    {
+      "name": "StressTestUSDC",
+      "address": "0x70ccd20eb29fae085edc35f5d3fd7544937b9aa3",
+      "role": "Stress set: test stablecoin for margin and payments, with a faucet"
+    },
+    {
+      "name": "StressSBill",
+      "address": "0xef88d920b75b9df5a5373354803c558d11d5c51b",
+      "role": "Stress set: our token: a mock tokenized T-bill share (ERC-20) whose NAV grows at a fixed rate"
+    },
+    {
+      "name": "StressMarketCalendar",
+      "address": "0xecfcd395e329df9967b73ab3c2a68f81a01429ae",
+      "role": "Stress set: says whether the T-bill market is open; the owner can switch the weekend on and off"
+    },
+    {
+      "name": "StressWeekendVault",
+      "address": "0xacc258550cabc72de480ffadd666d94992ec16d5",
+      "role": "Stress set: ERC-4626 pool of tUSDC that buys sBILL at a discount while the market is closed"
+    },
+    {
+      "name": "StressClearinghouse",
+      "address": "0xa1a1636ff2f17b2891145d29beb25fd4493211da",
+      "role": "Stress set: holds margin, opens trades, settles price moves and funding, and liquidates"
+    },
+    {
+      "name": "StressMockBtcUsdFeed",
+      "address": "0x84fab5b7d4374d93d58274fa161d89518781d866",
+      "role": "Stress set: mock BTC/USD price anyone can move, used only by the labelled stress set"
+    }
+  ],
+  "transactions": [
+    {
+      "hash": "0x5132c08f97abdb8c6e0a5a0e506ffb6f2e6de2d7db16810c276b1e0cca3bd81f",
+      "shows": "a fund posts sBILL as margin"
+    },
+    {
+      "hash": "0x5e5802a28e5fe9b9dd1d6d5adbe02a9f46741e2c6cf655c931930909173ba7a9",
+      "shows": "a trade opens at the Chainlink price"
+    },
+    {
+      "hash": "0xf3b72056ab79a4dc8b173ce21b064411b6b2dd675c7a9c59577b1ddcba0b9987",
+      "shows": "the funding rate is posted"
+    },
+    {
+      "hash": "0x30437de25e6a6656a38802fe28aa85dce63a2c8c3068973a8dd39b020d5cdf0d",
+      "shows": "the T-bill market closes (demo switch)"
+    },
+    {
+      "hash": "0x6386b7da7d301f822b1ec2765c585bdf6cf096c73d5575d25d15e22d9153d89c",
+      "shows": "settlement pays the winner through the vault, with funding"
+    },
+    {
+      "hash": "0x73bd20e396b21f742f633ad33bb5f621f5b636439dbd4e22dc82411eda14c813",
+      "shows": "the vault redeems its sBILL and keeps the discount"
+    },
+    {
+      "hash": "0xab77d5949d13654c01c898635aacaaef394ff454e6cc583a3ffd858b6cf55557",
+      "shows": "the keeper settles a trade"
+    },
+    {
+      "hash": "0x4036f3cc7c2febb3abf3a7e4524d3040effc0cc84fe92f96e1217121b6ee146b",
+      "shows": "a liquidation pays the winner and the liquidator through the vault"
+    }
+  ],
+  "features": [
+    {
+      "feature": "Test suite with revert tests",
+      "evidence": "packages/hardhat/test/WeekendMargin.ts; run with yarn test"
+    },
+    {
+      "feature": "Slither security scan",
+      "evidence": "docs/slither.md"
+    },
+    {
+      "feature": "Gas measured, with a change made because of it",
+      "evidence": "docs/gas.md"
+    },
+    {
+      "feature": "Front end",
+      "evidence": "packages/nextjs/app; video"
+    },
+    {
+      "feature": "Keeper script",
+      "evidence": "packages/hardhat/scripts/keeper.ts; tx 0xab77d5949d13654c01c898635aacaaef394ff454e6cc583a3ffd858b6cf55557"
+    },
+    {
+      "feature": "Chainlink feed with staleness and sign checks",
+      "evidence": "packages/hardhat/contracts/Clearinghouse.sol _price(); tests"
+    },
+    {
+      "feature": "On-chain funding settlement",
+      "evidence": "tx 0x6386b7da7d301f822b1ec2765c585bdf6cf096c73d5575d25d15e22d9153d89c (FundingApplied event)"
+    },
+    {
+      "feature": "Liquidation with a reward for the liquidator, plus a keeper",
+      "evidence": "tx 0x4036f3cc7c2febb3abf3a7e4524d3040effc0cc84fe92f96e1217121b6ee146b; packages/hardhat/scripts/keeper.ts"
+    },
+    {
+      "feature": "Weekend vault and calendar-aware margin (our own addition)",
+      "evidence": "tx 0x6386b7da7d301f822b1ec2765c585bdf6cf096c73d5575d25d15e22d9153d89c (SBillPurchased event)"
+    }
+  ],
+  "video": ""
+}

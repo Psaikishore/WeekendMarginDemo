@@ -1,0 +1,112 @@
+[
+  {
+    "time": "2026-11-02T01:48:36.921Z",
+    "step": "investor draws tUSDC",
+    "hash": "0x17bd47fd5bd27aa97df8398ea251a9689dce787ef41d8b7fd29ae595f093c4ce"
+  },
+  {
+    "time": "2026-11-02T01:48:50.381Z",
+    "step": "investor approves vault",
+    "hash": "0x288b4d4fb38fb937830241bd3c324e307394fe8141f87dd48fc44d0f6a2790ff"
+  },
+  {
+    "time": "2026-11-02T01:49:00.772Z",
+    "step": "investor deposits 50,000 tUSDC",
+    "hash": "0x97bd11a0cc9621e1e16dece63b6246548112ad8c692f43e3117503eab0213427"
+  },
+  {
+    "time": "2026-11-02T01:49:13.482Z",
+    "step": "Fund A draws tUSDC",
+    "hash": "0x569094d79412f2a831739907599579ddcf4cd0b9697829ed282afad675cbb561"
+  },
+  {
+    "time": "2026-11-02T01:49:26.072Z",
+    "step": "Fund A approves the fund",
+    "hash": "0x654e942925e0a2d818fe30ff58a207ea40cc79f29461eb2801a8ab4a0c770a79"
+  },
+  {
+    "time": "2026-11-02T01:49:37.010Z",
+    "step": "Fund A buys sBILL",
+    "hash": "0xba8ef0af1b023ffbacffaa6145bd61eea4957df0f81fe7a5774eeba5f6d21649"
+  },
+  {
+    "time": "2026-11-02T01:49:49.095Z",
+    "step": "Fund A approves the clearinghouse",
+    "hash": "0x433b5492c8515dc4a85cbef24db425837b41c83dafbf3199b6421a4546420796"
+  },
+  {
+    "time": "2026-11-02T01:50:13.014Z",
+    "step": "Fund A posts sBILL as margin",
+    "hash": "0x4e0000247b5878bbe1ebc1096a7a8264410750e87b5aa6971dde57e1ad4b23ee"
+  },
+  {
+    "time": "2026-11-02T01:50:36.726Z",
+    "step": "Trader B draws tUSDC",
+    "hash": "0x0f83da14ec5a35bab987a7f927d2bd13d1a16612db53c08cb2b22314feef2cf2"
+  },
+  {
+    "time": "2026-11-02T01:50:48.808Z",
+    "step": "Trader B approves the clearinghouse",
+    "hash": "0x480f8f0b80709ea4d8c8375a1a9a6f9c8c889e552a750276ebbc999a94f47dc6"
+  },
+  {
+    "time": "2026-11-02T01:51:00.872Z",
+    "step": "Trader B posts tUSDC as margin",
+    "hash": "0x93d2f5c68ed3da8611adc6539a6355642499d2bdd6233d7e01005d13a337521c"
+  },
+  {
+    "time": "2026-11-02T01:51:13.406Z",
+    "step": "mock BTC price set to $83000",
+    "hash": "0x6ce5dc308174ea608e312eed517e5a40159d10c2d7a90e521711fe2a71e505da"
+  },
+  {
+    "time": "2026-11-02T01:51:37.253Z",
+    "step": "Fund A offers to short 1 BTC",
+    "hash": "0xf4fdbd7bfb37ebdb054de7a4dae7936805a1395ef87363146e1be3fdb681c999"
+  },
+  {
+    "time": "2026-11-02T01:51:48.865Z",
+    "step": "Trader B accepts",
+    "hash": "0x606cc5e69db7786cd7e5998f3d611b124b1ec825c9cd9f7ad16794c1f650f017"
+  },
+  {
+    "time": "2026-11-02T01:52:03.477Z",
+    "step": "demo calendar switched to the weekend",
+    "hash": "0xbe556d12e5f8920d1aae452771877380588a2a0f4761657664a4b8e55a794a1e"
+  },
+  {
+    "time": "2026-11-02T01:52:12.515Z",
+    "step": "mock BTC price just below the model price",
+    "hash": "0x1394e05d2f16748ed8c77be5314e05577b05ff4034fb78730ad0c1dd1c7bea33"
+  },
+  {
+    "time": "2026-11-02T02:09:02.128Z",
+    "step": "mock BTC price just below the model price",
+    "hash": "0xac52360c5ed3c2bf6515cdc7c00aa8c9ea8683e359f98be07cafb7de6a1c672e"
+  },
+  {
+    "time": "2026-11-02T02:16:01.507Z",
+    "step": "mock BTC price just below the model price",
+    "hash": "0xd368a8ce1ebf051bd3b57d62b6bb444a1ade2acf6d184c6fc82b7d8d14b0fb64"
+  },
+  {
+    "time": "2026-11-02T02:16:13.519Z",
+    "step": "mock BTC price just above the model price",
+    "hash": "0xf700c0104df0f66c28df080636a33b003f3242d8a39d20a6ff2ff259815ed8e7"
+  },
+  {
+    "time": "2026-11-02T02:16:25.256Z",
+    "step": "Fund A liquidated by Trader D",
+    "hash": "0x4036f3cc7c2febb3abf3a7e4524d3040effc0cc84fe92f96e1217121b6ee146b"
+  },
+  {
+    "time": "2026-11-02T02:16:38.105Z",
+    "step": "demo calendar switched back to a business day",
+    "hash": "0x9eed310ff391651897c75e02202b7c8e22e5b90509df79521babc95e25e63f78"
+  },
+  {
+    "time": "2026-11-02T02:16:51.589Z",
+    "step": "vault redeems its sBILL inventory",
+    "hash": "0x2526bcfc3177e2037dc93f77c40a767d295ff3191aeb4cf5ef3e0ca03def8adc"
+  }
+]

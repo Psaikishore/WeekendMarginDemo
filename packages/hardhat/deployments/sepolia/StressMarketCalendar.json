@@ -1,0 +1,293 @@
+{
+  "address": "0xecfcd395e329df9967b73ab3c2a68f81a01429ae",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "operator",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "owner",
+          "type": "address"
+        }
+      ],
+      "name": "OwnableInvalidOwner",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        }
+      ],
+      "name": "OwnableUnauthorizedAccount",
+      "type": "error"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "bool",
+          "name": "weekend",
+          "type": "bool"
+        }
+      ],
+      "name": "DemoWeekendSet",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "previousOwner",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "OwnershipTransferred",
+      "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "isDemo",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "isOpen",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "isWeekend",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "owner",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "renounceOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "secondsUntilOpen",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bool",
+          "name": "weekend_",
+          "type": "bool"
+        }
+      ],
+      "name": "setWeekend",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "transferOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "weekend",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "contractName": "DemoCalendar",
+  "sourceName": "contracts/DemoCalendar.sol",
+  "bytecode": "0x6080604052348015600e575f5ffd5b506040516103fb3803806103fb833981016040819052602b9160b4565b806001600160a01b038116605857604051631e4fbdf760e01b81525f600482015260240160405180910390fd5b605f816065565b505060df565b5f80546001600160a01b038381166001600160a01b0319831681178455604051919092169283917f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e09190a35050565b5f6020828403121560c3575f5ffd5b81516001600160a01b038116811460d8575f5ffd5b9392505050565b61030f806100ec5f395ff3fe608060405234801561000f575f5ffd5b5060043610610090575f3560e01c8063b896368111610063578063b8963681146100ee578063dc0ff0c5146100ff578063ddb6066814610106578063f2fde38b1461011c578063fccecc691461012f575f5ffd5b806347535d7b14610094578063715018a6146100b75780638da5cb5b146100c1578063a9fc58dd146100db575b5f5ffd5b5f54600160a01b900460ff16155b60405190151581526020015b60405180910390f35b6100bf610142565b005b5f546040516001600160a01b0390911681526020016100ae565b5f546100a290600160a01b900460ff1681565b5f54600160a01b900460ff166100a2565b60016100a2565b61010e610155565b6040519081526020016100ae565b6100bf61012a36600461028d565b610171565b6100bf61013d3660046102ba565b6101b3565b61014a610212565b6101535f61023e565b565b5f8054600160a01b900460ff1661016b57505f90565b505f1990565b610179610212565b6001600160a01b0381166101a757604051631e4fbdf760e01b81525f60048201526024015b60405180910390fd5b6101b08161023e565b50565b6101bb610212565b5f8054821515600160a01b0260ff60a01b199091161790556040517f2e340bf1b83ebfd4de23fb3309172e354cdec988c21637f26a595376431e92d59061020790831515815260200190565b60405180910390a150565b5f546001600160a01b031633146101535760405163118cdaa760e01b815233600482015260240161019e565b5f80546001600160a01b038381166001600160a01b0319831681178455604051919092169283917f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e09190a35050565b5f6020828403121561029d575f5ffd5b81356001600160a01b03811681146102b3575f5ffd5b9392505050565b5f602082840312156102ca575f5ffd5b813580151581146102b3575f5ffdfea26469706673582212205290135aac68bbef03c4acafb0e20ad3a46de93e79496a3e8ee05247e53cf9ad64736f6c634300081e0033",
+  "deployedBytecode": "0x608060405234801561000f575f5ffd5b5060043610610090575f3560e01c8063b896368111610063578063b8963681146100ee578063dc0ff0c5146100ff578063ddb6066814610106578063f2fde38b1461011c578063fccecc691461012f575f5ffd5b806347535d7b14610094578063715018a6146100b75780638da5cb5b146100c1578063a9fc58dd146100db575b5f5ffd5b5f54600160a01b900460ff16155b60405190151581526020015b60405180910390f35b6100bf610142565b005b5f546040516001600160a01b0390911681526020016100ae565b5f546100a290600160a01b900460ff1681565b5f54600160a01b900460ff166100a2565b60016100a2565b61010e610155565b6040519081526020016100ae565b6100bf61012a36600461028d565b610171565b6100bf61013d3660046102ba565b6101b3565b61014a610212565b6101535f61023e565b565b5f8054600160a01b900460ff1661016b57505f90565b505f1990565b610179610212565b6001600160a01b0381166101a757604051631e4fbdf760e01b81525f60048201526024015b60405180910390fd5b6101b08161023e565b50565b6101bb610212565b5f8054821515600160a01b0260ff60a01b199091161790556040517f2e340bf1b83ebfd4de23fb3309172e354cdec988c21637f26a595376431e92d59061020790831515815260200190565b60405180910390a150565b5f546001600160a01b031633146101535760405163118cdaa760e01b815233600482015260240161019e565b5f80546001600160a01b038381166001600160a01b0319831681178455604051919092169283917f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e09190a35050565b5f6020828403121561029d575f5ffd5b81356001600160a01b03811681146102b3575f5ffd5b9392505050565b5f602082840312156102ca575f5ffd5b813580151581146102b3575f5ffdfea26469706673582212205290135aac68bbef03c4acafb0e20ad3a46de93e79496a3e8ee05247e53cf9ad64736f6c634300081e0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {},
+  "immutableReferences": {},
+  "inputSourceName": "project/contracts/DemoCalendar.sol",
+  "devdoc": {
+    "errors": {
+      "OwnableInvalidOwner(address)": [
+        {
+          "details": "The owner is not a valid owner account. (eg. `address(0)`)"
+        }
+      ],
+      "OwnableUnauthorizedAccount(address)": [
+        {
+          "details": "The caller account is not authorized to perform an operation."
+        }
+      ]
+    },
+    "kind": "dev",
+    "methods": {
+      "owner()": {
+        "details": "Returns the address of the current owner."
+      },
+      "renounceOwnership()": {
+        "details": "Leaves the contract without owner. It will not be possible to call `onlyOwner` functions. Can only be called by the current owner. NOTE: Renouncing ownership will leave the contract without an owner, thereby disabling any functionality that is only available to the owner."
+      },
+      "secondsUntilOpen()": {
+        "details": "The demo weekend ends when the operator switches it off, so there is no countdown."
+      },
+      "transferOwnership(address)": {
+        "details": "Transfers ownership of the contract to a new account (`newOwner`). Can only be called by the current owner."
+      }
+    },
+    "version": 1
+  },
+  "evm": {
+    "gasEstimates": {
+      "creation": {
+        "codeDepositCost": "156600",
+        "executionCost": "infinite",
+        "totalCost": "infinite"
+      },
+      "external": {
+        "isDemo()": "208",
+        "isOpen()": "2301",
+        "isWeekend()": "2308",
+        "owner()": "2344",
+        "renounceOwnership()": "infinite",
+        "secondsUntilOpen()": "2396",
+        "setWeekend(bool)": "27842",
+        "transferOwnership(address)": "28360",
+        "weekend()": "2381"
+      }
+    }
+  },
+  "metadata": "{\"compiler\":{\"version\":\"0.8.30+commit.73712a01\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"operator\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"}],\"name\":\"OwnableInvalidOwner\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"OwnableUnauthorizedAccount\",\"type\":\"error\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"bool\",\"name\":\"weekend\",\"type\":\"bool\"}],\"name\":\"DemoWeekendSet\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferred\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"isDemo\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"isOpen\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"isWeekend\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"renounceOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"secondsUntilOpen\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bool\",\"name\":\"weekend_\",\"type\":\"bool\"}],\"name\":\"setWeekend\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"weekend\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"errors\":{\"OwnableInvalidOwner(address)\":[{\"details\":\"The owner is not a valid owner account. (eg. `address(0)`)\"}],\"OwnableUnauthorizedAccount(address)\":[{\"details\":\"The caller account is not authorized to perform an operation.\"}]},\"kind\":\"dev\",\"methods\":{\"owner()\":{\"details\":\"Returns the address of the current owner.\"},\"renounceOwnership()\":{\"details\":\"Leaves the contract without owner. It will not be possible to call `onlyOwner` functions. Can only be called by the current owner. NOTE: Renouncing ownership will leave the contract without an owner, thereby disabling any functionality that is only available to the owner.\"},\"secondsUntilOpen()\":{\"details\":\"The demo weekend ends when the operator switches it off, so there is no countdown.\"},\"transferOwnership(address)\":{\"details\":\"Transfers ownership of the contract to a new account (`newOwner`). Can only be called by the current owner.\"}},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{\"isDemo()\":{\"notice\":\"True for the demo calendar, whose weekend is switched by an operator.\"}},\"notice\":\"Demo-only calendar. The operator switches the \\\"weekend\\\" on and off so the weekend path can be shown on any day. It is used only by the labelled demo deployment; the main deployment uses MarketCalendar, which nobody can change.\",\"version\":1}},\"settings\":{\"compilationTarget\":{\"project/contracts/DemoCalendar.sol\":\"DemoCalendar\"},\"evmVersion\":\"prague\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[\"project/:@openzeppelin/contracts/=npm/@openzeppelin/contracts@5.7.0/\"]},\"sources\":{\"npm/@openzeppelin/contracts@5.7.0/access/Ownable.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n// OpenZeppelin Contracts (last updated v5.0.0) (access/Ownable.sol)\\n\\npragma solidity ^0.8.20;\\n\\nimport {Context} from \\\"../utils/Context.sol\\\";\\n\\n/**\\n * @dev Contract module which provides a basic access control mechanism, where\\n * there is an account (an owner) that can be granted exclusive access to\\n * specific functions.\\n *\\n * The initial owner is set to the address provided by the deployer. This can\\n * later be changed with {transferOwnership}.\\n *\\n * This module is used through inheritance. It will make available the modifier\\n * `onlyOwner`, which can be applied to your functions to restrict their use to\\n * the owner.\\n */\\nabstract contract Ownable is Context {\\n    address private _owner;\\n\\n    /**\\n     * @dev The caller account is not authorized to perform an operation.\\n     */\\n    error OwnableUnauthorizedAccount(address account);\\n\\n    /**\\n     * @dev The owner is not a valid owner account. (eg. `address(0)`)\\n     */\\n    error OwnableInvalidOwner(address owner);\\n\\n    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);\\n\\n    /**\\n     * @dev Initializes the contract setting the address provided by the deployer as the initial owner.\\n     */\\n    constructor(address initialOwner) {\\n        if (initialOwner == address(0)) {\\n            revert OwnableInvalidOwner(address(0));\\n        }\\n        _transferOwnership(initialOwner);\\n    }\\n\\n    /**\\n     * @dev Throws if called by any account other than the owner.\\n     */\\n    modifier onlyOwner() {\\n        _checkOwner();\\n        _;\\n    }\\n\\n    /**\\n     * @dev Returns the address of the current owner.\\n     */\\n    function owner() public view virtual returns (address) {\\n        return _owner;\\n    }\\n\\n    /**\\n     * @dev Throws if the sender is not the owner.\\n     */\\n    function _checkOwner() internal view virtual {\\n        if (owner() != _msgSender()) {\\n            revert OwnableUnauthorizedAccount(_msgSender());\\n        }\\n    }\\n\\n    /**\\n     * @dev Leaves the contract without owner. It will not be possible to call\\n     * `onlyOwner` functions. Can only be called by the current owner.\\n     *\\n     * NOTE: Renouncing ownership will leave the contract without an owner,\\n     * thereby disabling any functionality that is only available to the owner.\\n     */\\n    function renounceOwnership() public virtual onlyOwner {\\n        _transferOwnership(address(0));\\n    }\\n\\n    /**\\n     * @dev Transfers ownership of the contract to a new account (`newOwner`).\\n     * Can only be called by the current owner.\\n     */\\n    function transferOwnership(address newOwner) public virtual onlyOwner {\\n        if (newOwner == address(0)) {\\n            revert OwnableInvalidOwner(address(0));\\n        }\\n        _transferOwnership(newOwner);\\n    }\\n\\n    /**\\n     * @dev Transfers ownership of the contract to a new account (`newOwner`).\\n     * Internal function without access restriction.\\n     */\\n    function _transferOwnership(address newOwner) internal virtual {\\n        address oldOwner = _owner;\\n        _owner = newOwner;\\n        emit OwnershipTransferred(oldOwner, newOwner);\\n    }\\n}\\n\",\"keccak256\":\"0xff6d0bb2e285473e5311d9d3caacb525ae3538a80758c10649a4d61029b017bb\",\"license\":\"MIT\"},\"npm/@openzeppelin/contracts@5.7.0/utils/Context.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n// OpenZeppelin Contracts (last updated v5.0.1) (utils/Context.sol)\\n\\npragma solidity ^0.8.20;\\n\\n/**\\n * @dev Provides information about the current execution context, including the\\n * sender of the transaction and its data. While these are generally available\\n * via msg.sender and msg.data, they should not be accessed in such a direct\\n * manner, since when dealing with meta-transactions the account sending and\\n * paying for execution may not be the actual sender (as far as an application\\n * is concerned).\\n *\\n * This contract is only required for intermediate, library-like contracts.\\n */\\nabstract contract Context {\\n    function _msgSender() internal view virtual returns (address) {\\n        return msg.sender;\\n    }\\n\\n    function _msgData() internal view virtual returns (bytes calldata) {\\n        return msg.data;\\n    }\\n\\n    function _contextSuffixLength() internal view virtual returns (uint256) {\\n        return 0;\\n    }\\n}\\n\",\"keccak256\":\"0x493033a8d1b176a037b2cc6a04dad01a5c157722049bbecf632ca876224dd4b2\",\"license\":\"MIT\"},\"project/contracts/DemoCalendar.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity ^0.8.20;\\n\\nimport { Ownable } from \\\"@openzeppelin/contracts/access/Ownable.sol\\\";\\nimport { IMarketCalendar } from \\\"./interfaces/IMarketCalendar.sol\\\";\\n\\n/// @notice Demo-only calendar. The operator switches the \\\"weekend\\\" on and off so the weekend path can\\n/// be shown on any day. It is used only by the labelled demo deployment; the main deployment uses\\n/// MarketCalendar, which nobody can change.\\ncontract DemoCalendar is IMarketCalendar, Ownable {\\n    bool public weekend;\\n\\n    event DemoWeekendSet(bool weekend);\\n\\n    constructor(address operator) Ownable(operator) {}\\n\\n    function setWeekend(bool weekend_) external onlyOwner {\\n        weekend = weekend_;\\n        emit DemoWeekendSet(weekend_);\\n    }\\n\\n    function isWeekend() external view returns (bool) {\\n        return weekend;\\n    }\\n\\n    function isOpen() external view returns (bool) {\\n        return !weekend;\\n    }\\n\\n    /// @dev The demo weekend ends when the operator switches it off, so there is no countdown.\\n    function secondsUntilOpen() external view returns (uint256) {\\n        return weekend ? type(uint256).max : 0;\\n    }\\n\\n    function isDemo() external pure returns (bool) {\\n        return true;\\n    }\\n}\\n\",\"keccak256\":\"0x2bdd19d06d54b446a03d68d33ac9cc5e38d907fd5e9d8620c540496ea0970039\",\"license\":\"MIT\"},\"project/contracts/interfaces/IMarketCalendar.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity ^0.8.20;\\n\\n/// @notice What the fund, the vault and the clearinghouse need to know about the T-bill market.\\ninterface IMarketCalendar {\\n    function isOpen() external view returns (bool);\\n\\n    function isWeekend() external view returns (bool);\\n\\n    /// @notice Seconds until the market opens; 0 when it is open.\\n    function secondsUntilOpen() external view returns (uint256);\\n\\n    /// @notice True for the demo calendar, whose weekend is switched by an operator.\\n    function isDemo() external view returns (bool);\\n}\\n\",\"keccak256\":\"0xbc71aaf780df741647170fa0d031cfb890526991abd93431f0fd4cf30bab33b2\",\"license\":\"MIT\"}},\"version\":1}",
+  "storageLayout": {
+    "storage": [
+      {
+        "astId": 8,
+        "contract": "project/contracts/DemoCalendar.sol:DemoCalendar",
+        "label": "_owner",
+        "offset": 0,
+        "slot": "0",
+        "type": "t_address"
+      },
+      {
+        "astId": 8262,
+        "contract": "project/contracts/DemoCalendar.sol:DemoCalendar",
+        "label": "weekend",
+        "offset": 20,
+        "slot": "0",
+        "type": "t_bool"
+      }
+    ],
+    "types": {
+      "t_address": {
+        "encoding": "inplace",
+        "label": "address",
+        "numberOfBytes": "20"
+      },
+      "t_bool": {
+        "encoding": "inplace",
+        "label": "bool",
+        "numberOfBytes": "1"
+      }
+    }
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {
+      "isDemo()": {
+        "notice": "True for the demo calendar, whose weekend is switched by an operator."
+      }
+    },
+    "notice": "Demo-only calendar. The operator switches the \"weekend\" on and off so the weekend path can be shown on any day. It is used only by the labelled demo deployment; the main deployment uses MarketCalendar, which nobody can change.",
+    "version": 1
+  },
+  "argsData": "0x0000000000000000000000001a15991f050baac5a5276d2950b8a6f4a776a5b1",
+  "transaction": {
+    "hash": "0x9e7565126bea99b76eeb70a44c6b299a978084e3c9aa27d3f53f4d0bc476453a",
+    "nonce": "0x25",
+    "origin": "0x1a15991f050baac5a5276d2950b8a6f4a776a5b1"
+  },
+  "receipt": {
+    "blockHash": "0xf9ede371891cf09efca72962cab234fd255a6837e71349b892705baca12ae4f7",
+    "blockNumber": "0xb7ca5c",
+    "transactionIndex": "0x9"
+  }
+}

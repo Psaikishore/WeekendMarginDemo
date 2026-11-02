@@ -1,137 +1,162 @@
 [
   {
-    "time": "2026-10-30T09:47:00.939Z",
-    "step": "gas top-up for Fund A",
-    "hash": "0x991e10501a439060ec02262b183cb2ac152194f28041309421d2c08104618361"
-  },
-  {
-    "time": "2026-10-30T09:47:13.503Z",
-    "step": "gas top-up for Trader B",
-    "hash": "0xa3f58f164fe8f4797f499f14a6346241b5446a3857966f621a864196cda4cd1d"
-  },
-  {
-    "time": "2026-10-30T09:47:25.480Z",
-    "step": "gas top-up for Fund C",
-    "hash": "0xe01161bb1fcd3029a78b8f7f146d44be97a5ca74434430620f45091c086dea53"
-  },
-  {
-    "time": "2026-10-30T09:47:38.010Z",
-    "step": "gas top-up for Trader D",
-    "hash": "0xb36b0f5067c66678b4ea4828205429b072b745f960ae451e720c76cf5a85cd1d"
-  },
-  {
-    "time": "2026-10-30T09:47:49.335Z",
+    "time": "2026-11-02T01:30:48.749Z",
     "step": "investor draws tUSDC from faucet",
-    "hash": "0x8303b6269e214b57dc44ba7c76d527e943d6cfe1d1259915a7aec60122383772"
+    "hash": "0x1b7fc6427589b0816ec321a5f30b0f80039347a510dad3180511e84de323bbbb"
   },
   {
-    "time": "2026-10-30T09:48:00.750Z",
+    "time": "2026-11-02T01:31:01.787Z",
     "step": "investor approves vault",
-    "hash": "0x1bc7a5db21df30e5ead668163b041eb04705a0645fe1163793b6df94f9631a45"
+    "hash": "0xc65b1b0c51e26399d5ea37f3580ba779eeeb79f107b394fce50de5d10a7799d3"
   },
   {
-    "time": "2026-10-30T09:48:13.757Z",
+    "time": "2026-11-02T01:31:12.620Z",
     "step": "investor deposits 50,000 tUSDC into the weekend vault",
-    "hash": "0x882c5a73b7277ba1e406fc761ba37131058b854b54f2f4b991b5c34e960c8b33"
+    "hash": "0x88b2c2e811021e98921029cd5324ab38447e36306e23a28038b5d9776a85c293"
   },
   {
-    "time": "2026-10-30T09:48:25.290Z",
+    "time": "2026-11-02T01:31:37.480Z",
     "step": "Fund A draws tUSDC from faucet",
-    "hash": "0x7006d62697ce23314e2bbd09c46e2502e5711837957624ee8154c538c5067433"
+    "hash": "0x49ae77fd5856770a205355324dac60b91e3344e21802f659ba79d1aec5f1c1ad"
   },
   {
-    "time": "2026-10-30T09:48:37.291Z",
+    "time": "2026-11-02T01:31:50.033Z",
     "step": "Fund A approves the T-bill fund",
-    "hash": "0xe8d896750a5e6ee91af38d18ef7c0c769784a8a403f603978c3930ee9b5d1383"
+    "hash": "0xbe861e6eac04350f34c2bb5bd1f323fc22134a2a34d2f43b17caab49919a0e28"
   },
   {
-    "time": "2026-10-30T09:48:49.856Z",
+    "time": "2026-11-02T01:32:01.594Z",
     "step": "Fund A buys sBILL with 30,000 tUSDC",
-    "hash": "0xf150e530d7a6d795841ca97680744cade599cdcec783988a8126f60e856feac0"
+    "hash": "0xf5fd4090ec5a24d3dfce68336d44409386f60e58e921a737aed5e088b8dd38f4"
   },
   {
-    "time": "2026-10-30T09:49:02.317Z",
+    "time": "2026-11-02T01:32:12.538Z",
     "step": "Fund A approves the clearinghouse",
-    "hash": "0x6443b1e8ebd1b55b4af675a27ea4c6a7cb010d5677150ebbced9caf7028df505"
+    "hash": "0x4b8a84fbb6897e187cc888f92240f30a7b4bc897bc698b7dd747d32c137835a2"
   },
   {
-    "time": "2026-10-30T09:49:14.486Z",
+    "time": "2026-11-02T01:32:25.111Z",
     "step": "Fund A posts sBILL as margin",
-    "hash": "0x7d2dee79d8bf83118556fe3ab55a9370390222d349f7301bd4738e7ed24fb273"
+    "hash": "0x52895be5ba19f2052baf3cc43cf9e6dba94ec0345d4678a43260cee1de5df7a5"
   },
   {
-    "time": "2026-10-30T09:49:24.959Z",
+    "time": "2026-11-02T01:32:48.733Z",
     "step": "Fund C draws tUSDC from faucet",
-    "hash": "0x6560e952d4a1657b62c38a679864c2a9c7675b7ea5d0583e5feaa1591d344b5b"
+    "hash": "0x486e5c6ebfd2e6021f7c279965c2419466e193ed3573b38e15188b0998eaa720"
   },
   {
-    "time": "2026-10-30T09:49:38.440Z",
+    "time": "2026-11-02T01:33:01.241Z",
     "step": "Fund C approves the T-bill fund",
-    "hash": "0x663779a26f0e653a98c73eea8057595ab549c7b1bd71c52724d3e365f99047ee"
+    "hash": "0x568d4a74001b83be11230755677deb1001e352633a9564951d4fea19d7f6eb61"
   },
   {
-    "time": "2026-10-30T09:49:48.849Z",
+    "time": "2026-11-02T01:33:13.211Z",
     "step": "Fund C buys sBILL with 30,000 tUSDC",
-    "hash": "0x0b79c7e26fd0009b06e34155ee6e0c32c45e3959da39ebae72012868b7fc7dda"
+    "hash": "0xe2f564a469fbfe7bd4f1d3f0c52a9507205d76ae0b2792153599bdca74f81f0e"
   },
   {
-    "time": "2026-10-30T09:50:00.871Z",
+    "time": "2026-11-02T01:33:25.934Z",
     "step": "Fund C approves the clearinghouse",
-    "hash": "0x7f7c8e166825c74c28bc6d3fb829d637cacfdfb4992f11c508274f04ecb2b8ad"
+    "hash": "0xe5cb311d89277355acabcba3295ce5eebb27ebf0fb8809296f15fbc8a6d14d96"
   },
   {
-    "time": "2026-10-30T09:50:12.853Z",
+    "time": "2026-11-02T01:33:48.600Z",
     "step": "Fund C posts sBILL as margin",
-    "hash": "0x568a5f7432d1280ea56cb3b4ff823780320543d110a2f206dc96d81d0395cc5b"
+    "hash": "0x5132c08f97abdb8c6e0a5a0e506ffb6f2e6de2d7db16810c276b1e0cca3bd81f"
   },
   {
-    "time": "2026-10-30T09:50:37.027Z",
+    "time": "2026-11-02T01:34:14.407Z",
     "step": "Trader B draws tUSDC from faucet",
-    "hash": "0x5304ddded0863e632aa0ae79907bed1cc8cb83d720826c9ef6e099c80e4f8fd1"
+    "hash": "0xece81eac29887dc69f656b2547f4ff14aa4d956e98d49d395cbad1f2c0ba42c6"
   },
   {
-    "time": "2026-10-30T09:50:50.018Z",
+    "time": "2026-11-02T01:34:25.926Z",
     "step": "Trader B approves the clearinghouse",
-    "hash": "0xaa8761862185fddddf2f02fe6609c84894ae927a4d49ab9cb8289ef3f90bba44"
+    "hash": "0xaab36c01ef55f1cba247f20c536c9b99eecc06f38b4765a2760566026dc20cc3"
   },
   {
-    "time": "2026-10-30T09:51:01.400Z",
+    "time": "2026-11-02T01:34:36.927Z",
     "step": "Trader B posts 30,000 tUSDC as margin",
-    "hash": "0x523601188b1fd648e2a3c835fc6c11b2df519ed5bbf72e58cf18ebd8a03dace4"
+    "hash": "0xf494b39944f274c440a5694e787c8a25597e3cacde38aa772c0240571d359fcd"
   },
   {
-    "time": "2026-10-30T09:51:12.946Z",
+    "time": "2026-11-02T01:34:49.650Z",
     "step": "Trader D draws tUSDC from faucet",
-    "hash": "0x3869b7f5138ffe8a8f48fafa042536d6eb061fc6bfc6b591ca9b45f41117121b"
+    "hash": "0x3d3829f1b54b10771aaad2a33f72f41819c7d82c078860e5ec4782d3687f83cc"
   },
   {
-    "time": "2026-10-30T09:51:25.443Z",
+    "time": "2026-11-02T01:35:01.067Z",
     "step": "Trader D approves the clearinghouse",
-    "hash": "0x467cbf99ccbbf5d03ac09821325a02075544af9637b53ebeef3453733b87cf75"
+    "hash": "0x384d18c98593092ed425a70a0f65fe6eaf00d98a77b4b010ede8daf0e140f6c6"
   },
   {
-    "time": "2026-10-30T09:51:37.381Z",
+    "time": "2026-11-02T01:35:13.648Z",
     "step": "Trader D posts 30,000 tUSDC as margin",
-    "hash": "0x33be45e23ca6e3c2b041e286fbe9c517952048e90cda48d9375d35d3c38b726b"
+    "hash": "0xd46ae3ed69f956822c0686f2ba1987dbdb44f54e1561905a8efaaf4b80d05492"
   },
   {
-    "time": "2026-10-30T09:51:50.110Z",
+    "time": "2026-11-02T01:35:25.850Z",
     "step": "Fund A short vs Trader B long: offer posted",
-    "hash": "0x81d6247d3f2396d3d7640374dc7d3a21b2d43c799e9a06fbb15a7347c0a62c16"
+    "hash": "0x24394b50a47733cebc90ce3872eec2cac6b3c05db9b1a3e5f494c4a485ce34e7"
   },
   {
-    "time": "2026-10-30T09:52:01.641Z",
+    "time": "2026-11-02T01:35:37.404Z",
     "step": "Fund A short vs Trader B long: offer accepted",
-    "hash": "0x16db16306a1e81a8e56868f1ce39dcf3bfe5c978dff15b95b1412d02b52a7109"
+    "hash": "0x27150b9cbe7d8c11333e9c0981c72c218ff9c5c7a2be9e3bcfd30aa97d7dd0ba"
   },
   {
-    "time": "2026-10-30T09:52:13.106Z",
+    "time": "2026-11-02T01:35:48.990Z",
     "step": "Fund C long vs Trader D short: offer posted",
-    "hash": "0x5077b375df2e0fc1855ec8e2fa384f6334f218efa9a87bd06882482b01ca3ce3"
+    "hash": "0xde93b4a5de7c516eb08bc40449e9b6a4b799cabf25258daa1e65ede994189a43"
   },
   {
-    "time": "2026-10-30T09:52:25.069Z",
+    "time": "2026-11-02T01:36:01.103Z",
     "step": "Fund C long vs Trader D short: offer accepted",
-    "hash": "0x0421ddc801811a2db3d419d742add8ce167ce796b35e6069de617dc1b0e90a30"
+    "hash": "0x5e5802a28e5fe9b9dd1d6d5adbe02a9f46741e2c6cf655c931930909173ba7a9"
+  },
+  {
+    "time": "2026-11-02T01:36:14.088Z",
+    "step": "funding rate set to 0.000054% per hour",
+    "hash": "0xd58ee5c6affae57fc60fbdb30944818e1a93bbc5d626bcd8a5449ab86ef7d5e2"
+  },
+  {
+    "time": "2026-11-02T01:47:00.728Z",
+    "step": "demo calendar switched to the weekend",
+    "hash": "0x30437de25e6a6656a38802fe28aa85dce63a2c8c3068973a8dd39b020d5cdf0d"
+  },
+  {
+    "time": "2026-11-02T01:47:12.743Z",
+    "step": "trade 1 settled through the vault on the demo weekend",
+    "hash": "0x6386b7da7d301f822b1ec2765c585bdf6cf096c73d5575d25d15e22d9153d89c"
+  },
+  {
+    "time": "2026-11-02T01:47:24.727Z",
+    "step": "trade 2 settled in tUSDC on the demo weekend",
+    "hash": "0xa63277cde7cc1432a6e13cdd9a12ea0753802ca7dc74bbf4aeb414480b86b56e"
+  },
+  {
+    "time": "2026-11-02T01:47:37.702Z",
+    "step": "demo calendar switched back to a business day",
+    "hash": "0xd73ad763f27f746765e72bc014b47594db0cf85206d3ca5fc1a25052e65c8fff"
+  },
+  {
+    "time": "2026-11-02T01:47:48.969Z",
+    "step": "vault redeems its sBILL inventory",
+    "hash": "0x73bd20e396b21f742f633ad33bb5f621f5b636439dbd4e22dc82411eda14c813"
+  },
+  {
+    "time": "2026-11-02T01:48:00.756Z",
+    "step": "funding rate set to 0.000054% per hour (Deribit)",
+    "hash": "0xf3b72056ab79a4dc8b173ce21b064411b6b2dd675c7a9c59577b1ddcba0b9987"
+  },
+  {
+    "time": "2026-11-02T01:48:13.299Z",
+    "step": "trade 1 settled at $78462",
+    "hash": "0x3db43d0fa4e726f49f70f6266272149b16416faac082bbd7ac4669ce0e658f1f"
+  },
+  {
+    "time": "2026-11-02T01:48:25.264Z",
+    "step": "trade 2 settled at $78462",
+    "hash": "0xab77d5949d13654c01c898635aacaaef394ff454e6cc583a3ffd858b6cf55557"
   }
 ]

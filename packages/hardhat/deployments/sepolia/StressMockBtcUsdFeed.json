@@ -1,0 +1,214 @@
+{
+  "address": "0x84fab5b7d4374d93d58274fa161d89518781d866",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "uint8",
+          "name": "decimals_",
+          "type": "uint8"
+        },
+        {
+          "internalType": "int256",
+          "name": "initialAnswer",
+          "type": "int256"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "inputs": [],
+      "name": "decimals",
+      "outputs": [
+        {
+          "internalType": "uint8",
+          "name": "",
+          "type": "uint8"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "description",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "latestRoundData",
+      "outputs": [
+        {
+          "internalType": "uint80",
+          "name": "",
+          "type": "uint80"
+        },
+        {
+          "internalType": "int256",
+          "name": "",
+          "type": "int256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint80",
+          "name": "",
+          "type": "uint80"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "int256",
+          "name": "newAnswer",
+          "type": "int256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "newUpdatedAt",
+          "type": "uint256"
+        }
+      ],
+      "name": "setRoundData",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "int256",
+          "name": "newAnswer",
+          "type": "int256"
+        }
+      ],
+      "name": "updateAnswer",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "contractName": "MockV3Aggregator",
+  "sourceName": "contracts/mocks/MockV3Aggregator.sol",
+  "bytecode": "0x60a060405234801561000f575f5ffd5b5060405161036838038061036883398101604081905261002e91610097565b60ff821660805261003e81610045565b50506100ff565b61004f8142610052565b50565b5f80546001600160501b03169080610069836100c8565b82546001600160501b039182166101009390930a928302919092021990911617905550600191909155600255565b5f5f604083850312156100a8575f5ffd5b825160ff811681146100b8575f5ffd5b6020939093015192949293505050565b5f6001600160501b0382166002600160501b031981016100f657634e487b7160e01b5f52601160045260245ffd5b60010192915050565b6080516102526101165f395f605e01526102525ff3fe608060405234801561000f575f5ffd5b5060043610610055575f3560e01c8063313ce5671461005957806362cbca24146100975780637284e416146100ac578063a87a20ce146100dc578063feaf968c146100ef575b5f5ffd5b6100807f000000000000000000000000000000000000000000000000000000000000000081565b60405160ff90911681526020015b60405180910390f35b6100aa6100a536600461017a565b610128565b005b604080518082018252600e81526d135bd8dac8109510c80bc81554d160921b6020820152905161008e919061019a565b6100aa6100ea3660046101cf565b61016d565b5f54600154600254604080516001600160501b03909416808552602085019390935283018190526060830152608082015260a00161008e565b5f80546001600160501b0316908061013f836101e6565b82546001600160501b039182166101009390930a928302919092021990911617905550600191909155600255565b6101778142610128565b50565b5f5f6040838503121561018b575f5ffd5b50508035926020909101359150565b602081525f82518060208401528060208501604085015e5f604082850101526040601f19601f83011684010191505092915050565b5f602082840312156101df575f5ffd5b5035919050565b5f6001600160501b0382166001600160501b03810361021357634e487b7160e01b5f52601160045260245ffd5b6001019291505056fea26469706673582212208e1052b31f347b149df456785a8c8872120da03abc96c2d50cb5e314f740e4cb64736f6c634300081e0033",
+  "deployedBytecode": "0x608060405234801561000f575f5ffd5b5060043610610055575f3560e01c8063313ce5671461005957806362cbca24146100975780637284e416146100ac578063a87a20ce146100dc578063feaf968c146100ef575b5f5ffd5b6100807f000000000000000000000000000000000000000000000000000000000000000081565b60405160ff90911681526020015b60405180910390f35b6100aa6100a536600461017a565b610128565b005b604080518082018252600e81526d135bd8dac8109510c80bc81554d160921b6020820152905161008e919061019a565b6100aa6100ea3660046101cf565b61016d565b5f54600154600254604080516001600160501b03909416808552602085019390935283018190526060830152608082015260a00161008e565b5f80546001600160501b0316908061013f836101e6565b82546001600160501b039182166101009390930a928302919092021990911617905550600191909155600255565b6101778142610128565b50565b5f5f6040838503121561018b575f5ffd5b50508035926020909101359150565b602081525f82518060208401528060208501604085015e5f604082850101526040601f19601f83011684010191505092915050565b5f602082840312156101df575f5ffd5b5035919050565b5f6001600160501b0382166001600160501b03810361021357634e487b7160e01b5f52601160045260245ffd5b6001019291505056fea26469706673582212208e1052b31f347b149df456785a8c8872120da03abc96c2d50cb5e314f740e4cb64736f6c634300081e0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {},
+  "immutableReferences": {
+    "9103": [
+      {
+        "length": 32,
+        "start": 94
+      }
+    ]
+  },
+  "inputSourceName": "project/contracts/mocks/MockV3Aggregator.sol",
+  "devdoc": {
+    "kind": "dev",
+    "methods": {
+      "setRoundData(int256,uint256)": {
+        "details": "Lets tests publish a round with an old timestamp to exercise the staleness check."
+      }
+    },
+    "version": 1
+  },
+  "evm": {
+    "gasEstimates": {
+      "creation": {
+        "codeDepositCost": "118800",
+        "executionCost": "infinite",
+        "totalCost": "infinite"
+      },
+      "external": {
+        "decimals()": "infinite",
+        "description()": "infinite",
+        "latestRoundData()": "6649",
+        "setRoundData(int256,uint256)": "70980",
+        "updateAnswer(int256)": "71033"
+      }
+    }
+  },
+  "metadata": "{\"compiler\":{\"version\":\"0.8.30+commit.73712a01\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"uint8\",\"name\":\"decimals_\",\"type\":\"uint8\"},{\"internalType\":\"int256\",\"name\":\"initialAnswer\",\"type\":\"int256\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"inputs\":[],\"name\":\"decimals\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"description\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"latestRoundData\",\"outputs\":[{\"internalType\":\"uint80\",\"name\":\"\",\"type\":\"uint80\"},{\"internalType\":\"int256\",\"name\":\"\",\"type\":\"int256\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"internalType\":\"uint80\",\"name\":\"\",\"type\":\"uint80\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"int256\",\"name\":\"newAnswer\",\"type\":\"int256\"},{\"internalType\":\"uint256\",\"name\":\"newUpdatedAt\",\"type\":\"uint256\"}],\"name\":\"setRoundData\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"int256\",\"name\":\"newAnswer\",\"type\":\"int256\"}],\"name\":\"updateAnswer\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{\"setRoundData(int256,uint256)\":{\"details\":\"Lets tests publish a round with an old timestamp to exercise the staleness check.\"}},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"notice\":\"Local stand-in for the Chainlink BTC/USD feed. Used only on the Hardhat network.\",\"version\":1}},\"settings\":{\"compilationTarget\":{\"project/contracts/mocks/MockV3Aggregator.sol\":\"MockV3Aggregator\"},\"evmVersion\":\"prague\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[\"project/:@openzeppelin/contracts/=npm/@openzeppelin/contracts@5.7.0/\"]},\"sources\":{\"project/contracts/interfaces/AggregatorV3Interface.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity ^0.8.20;\\n\\n/// @notice The subset of Chainlink's AggregatorV3Interface that the clearinghouse reads.\\ninterface AggregatorV3Interface {\\n    function decimals() external view returns (uint8);\\n\\n    function description() external view returns (string memory);\\n\\n    function latestRoundData()\\n        external\\n        view\\n        returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound);\\n}\\n\",\"keccak256\":\"0xee7917d9fac0e01f875b0ce22596294fb14aee5d05164892e59f6a5aa0f0a305\",\"license\":\"MIT\"},\"project/contracts/mocks/MockV3Aggregator.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity ^0.8.20;\\n\\nimport { AggregatorV3Interface } from \\\"../interfaces/AggregatorV3Interface.sol\\\";\\n\\n/// @notice Local stand-in for the Chainlink BTC/USD feed. Used only on the Hardhat network.\\ncontract MockV3Aggregator is AggregatorV3Interface {\\n    uint8 public immutable decimals;\\n\\n    uint80 private roundId;\\n    int256 private answer;\\n    uint256 private updatedAt;\\n\\n    constructor(uint8 decimals_, int256 initialAnswer) {\\n        decimals = decimals_;\\n        updateAnswer(initialAnswer);\\n    }\\n\\n    function description() external pure returns (string memory) {\\n        return \\\"Mock BTC / USD\\\";\\n    }\\n\\n    function updateAnswer(int256 newAnswer) public {\\n        setRoundData(newAnswer, block.timestamp);\\n    }\\n\\n    /// @dev Lets tests publish a round with an old timestamp to exercise the staleness check.\\n    function setRoundData(int256 newAnswer, uint256 newUpdatedAt) public {\\n        roundId++;\\n        answer = newAnswer;\\n        updatedAt = newUpdatedAt;\\n    }\\n\\n    function latestRoundData() external view returns (uint80, int256, uint256, uint256, uint80) {\\n        return (roundId, answer, updatedAt, updatedAt, roundId);\\n    }\\n}\\n\",\"keccak256\":\"0xe7e0b31ef4e1f7c983824e9b401a5bb2c3ffb57fcccb2263b2f1e26ace8c4c39\",\"license\":\"MIT\"}},\"version\":1}",
+  "storageLayout": {
+    "storage": [
+      {
+        "astId": 9105,
+        "contract": "project/contracts/mocks/MockV3Aggregator.sol:MockV3Aggregator",
+        "label": "roundId",
+        "offset": 0,
+        "slot": "0",
+        "type": "t_uint80"
+      },
+      {
+        "astId": 9107,
+        "contract": "project/contracts/mocks/MockV3Aggregator.sol:MockV3Aggregator",
+        "label": "answer",
+        "offset": 0,
+        "slot": "1",
+        "type": "t_int256"
+      },
+      {
+        "astId": 9109,
+        "contract": "project/contracts/mocks/MockV3Aggregator.sol:MockV3Aggregator",
+        "label": "updatedAt",
+        "offset": 0,
+        "slot": "2",
+        "type": "t_uint256"
+      }
+    ],
+    "types": {
+      "t_int256": {
+        "encoding": "inplace",
+        "label": "int256",
+        "numberOfBytes": "32"
+      },
+      "t_uint256": {
+        "encoding": "inplace",
+        "label": "uint256",
+        "numberOfBytes": "32"
+      },
+      "t_uint80": {
+        "encoding": "inplace",
+        "label": "uint80",
+        "numberOfBytes": "10"
+      }
+    }
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "notice": "Local stand-in for the Chainlink BTC/USD feed. Used only on the Hardhat network.",
+    "version": 1
+  },
+  "argsData": "0x00000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000078c7e8d3800",
+  "transaction": {
+    "hash": "0xa3e959135fd0d5b424dc4dc7bb5ce9edee58ceae00031391240e6251a1671c42",
+    "nonce": "0x23",
+    "origin": "0x1a15991f050baac5a5276d2950b8a6f4a776a5b1"
+  },
+  "receipt": {
+    "blockHash": "0x0c9dc052bb488cfb138d249c247538b3e7c183368f2dc63d8f5d932b882a8310",
+    "blockNumber": "0xb7ca5a",
+    "transactionIndex": "0x3f"
+  }
+}
