@@ -23,7 +23,7 @@ As of the night of November 1, 2026 (New York time). **The final contracts are l
 |---|---|---|
 | Contracts and tests | Sai | Done: 37 tests pass |
 | Keeper, demo scripts, liquidation script | Sai | Done, and run on Sepolia |
-| Front end | Sai | Done: margin, trade, vault, controls, economics. Every flow tested on a local chain with a test wallet. On Sepolia, the pages read the live contracts correctly, but no transaction has been sent from the site with MetaMask yet |
+| Front end | Sai | Done: margin, trade, vault, controls, economics. Every button was pressed on a local chain with a test wallet on November 2, including a refused transaction, and four small fixes followed (fixed gas limits on the settle-path calls, no 0% rate from an empty field, the mock feed named where the feed is a mock, and no cleared field on a wrong-network refusal). On Sepolia, the pages read the live contracts correctly, but no transaction has been sent from the site with MetaMask yet; the video is where that happens |
 | Slither scan | Sai | Done: [docs/slither.md](docs/slither.md) |
 | Gas, with one before/after change | Sai | Done: [docs/gas.md](docs/gas.md) |
 | README | Sai | Done |
@@ -33,7 +33,7 @@ As of the night of November 1, 2026 (New York time). **The final contracts are l
 | **Going-to-market plan** | Swastik | The model is built (notebook Section G and the Economics page), with placeholder inputs. The plan itself isn't written |
 | **Risks: BUIDL and BENJI holder restrictions** | Swastik | Not started |
 | Report PDF (`docs/`) | Both | Not started. Use LaTeX |
-| Video, with every member speaking | Both | Not started |
+| Video, with every member speaking | Both | Planned: Sai has the shot list and the click-by-click weekend story (12 transactions from the site, only the two weekend switches signed by the deployer). Not recorded |
 | `submission.json` | Sai | Written and checked: it matches the brief's template, and all 16 addresses and 8 transactions were confirmed on Sepolia. **The video link is still empty.** Add it with `VIDEO_URL=https://... yarn evidence` |
 | Repo shared with the professor and TA, tag `final`, Brightspace upload | Both | Not done. The tag goes on last, because the repo at that tag is what gets graded |
 
@@ -129,7 +129,8 @@ The vault's profit is small because BTC moved only 0.56% and just 0.9% of the va
 
 **Not tested on Sepolia yet:**
 
-- Sending a transaction from the site with MetaMask. The site reads the live contracts correctly, and every flow was tested on a local chain with a test wallet.
+- Sending a transaction from the site with MetaMask. The site reads the live contracts correctly, and every button was pressed on a local chain with a test wallet (last on November 2). The video's weekend story is the first live use, and the site now passes a fixed gas limit on settle, close, liquidate, take-out and the mock price update, so a wallet's short estimate can't repeat the out-of-gas failure above.
+- A liquidation from the site. The table shows Liquidate from the account's equity, while the contract decides from collateral after settlement, so in a narrow band the button can appear before the contract agrees; the site then shows the refusal in plain words. The recorded Stress-set liquidation is the evidence, and a live one needs the mock price moved well past the liquidation price.
 - A repeat run of the weekend story. Its first step withdraws the fund's spare tUSDC, with a fixed gas limit added after the live run. That has only run locally, so the first video take will be its first live use.
 
 ## What the professor asked for

@@ -54,4 +54,4 @@ As the demo set, but the BTC price is a mock anyone can move.
 | the keeper settles a trade | [`0xab77d5949d13654c01c898635aacaaef394ff454e6cc583a3ffd858b6cf55557`](https://sepolia.etherscan.io/tx/0xab77d5949d13654c01c898635aacaaef394ff454e6cc583a3ffd858b6cf55557) |
 | a liquidation pays the winner and the liquidator through the vault | [`0x4036f3cc7c2febb3abf3a7e4524d3040effc0cc84fe92f96e1217121b6ee146b`](https://sepolia.etherscan.io/tx/0x4036f3cc7c2febb3abf3a7e4524d3040effc0cc84fe92f96e1217121b6ee146b) |
 
-The full lists are in `packages/hardhat/demo-log.*.json`.
+Every step of the demo runs is in `packages/hardhat/demo-log.sepolia-*.json`. Those logs leave out the deployments, the setup calls after them and one mock price update that ran out of gas, which [gas.md](gas.md) explains.

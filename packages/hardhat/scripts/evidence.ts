@@ -134,7 +134,11 @@ for (const set of SETS) {
 }
 lines.push("## Key transactions", "", "| What it shows | Transaction |", "|---|---|");
 for (const { hash, shows } of transactions) lines.push(`| ${shows} | ${link("tx", hash)} |`);
-lines.push("", "The full lists are in `packages/hardhat/demo-log.*.json`.", "");
+lines.push(
+  "",
+  `Every step of the demo runs is in \`packages/hardhat/demo-log.${networkName}-*.json\`. Those logs leave out the deployments, the setup calls after them and one mock price update that ran out of gas, which [gas.md](gas.md) explains.`,
+  "",
+);
 writeFileSync(`${ROOT}/docs/deployments.md`, lines.join("\n"));
 
 console.log(`Wrote submission.json and docs/deployments.md for ${networkName}.`);
