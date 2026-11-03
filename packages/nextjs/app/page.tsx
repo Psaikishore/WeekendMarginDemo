@@ -3,6 +3,7 @@
 import Link from "next/link";
 import type { NextPage } from "next";
 import { ActivityFeed } from "~~/components/weekend/ActivityFeed";
+import { useDeployment } from "~~/components/weekend/DeploymentProvider";
 import { TradesTable } from "~~/components/weekend/TradesTable";
 import { Notice, Panel, Stat } from "~~/components/weekend/ui";
 import { useOpenTrades } from "~~/hooks/weekend/useMarket";
@@ -13,8 +14,10 @@ import { fmtBps, fmtDuration, fmtFundingRate, fmtToken, fmtUsd } from "~~/utils/
 const Home: NextPage = () => {
   const system = useSystem();
   const now = useNow();
+  const { mockFeed } = useDeployment();
   const { trades } = useOpenTrades(system);
   const { isOpen, inventoryCost, btcPrice, priceProblem, priceUpdatedAt, nav, purchasePrice, discountBps } = system;
+  const feedName = mockFeed ? "mock BTC price" : "Chainlink price";
   const holdsSBill = (inventoryCost ?? 0n) > 0n;
   const age = priceUpdatedAt ? Math.max(0, now - priceUpdatedAt) : undefined;
 
@@ -61,8 +64,9 @@ const Home: NextPage = () => {
       {priceProblem && (
         <div className="mt-6">
           <Notice tone="warning">
-            The Chainlink price is {priceProblem}. As a safety rule, settlement, liquidation and new trades wait until a
+            The {feedName} is {priceProblem}. As a safety rule, settlement, liquidation and new trades wait until a
             fresh price arrives. No money can move at a bad price.
+            {mockFeed && " On this set, anyone can post a new price from the Controls page."}
           </Notice>
         </div>
       )}
@@ -71,7 +75,7 @@ const Home: NextPage = () => {
         <Stat
           label="BTC price"
           value={fmtUsd(btcPrice)}
-          hint={age === undefined ? "Chainlink" : `Chainlink, ${fmtDuration(age)} ago`}
+          hint={`${mockFeed ? "Mock feed" : "Chainlink"}${age === undefined ? "" : `, ${fmtDuration(age)} ago`}`}
         />
         <Stat label="sBILL value (NAV)" value={fmtUsd(nav, 4)} hint={`Grows ${fmtBps(system.apyBps)} a year`} />
         <Stat label="Vault buys at" value={fmtUsd(purchasePrice, 4)} hint={`NAV minus ${fmtBps(discountBps)}`} />

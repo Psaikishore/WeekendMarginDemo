@@ -6,6 +6,7 @@ import { Empty, TxButton } from "~~/components/weekend/ui";
 import { useScaffoldWriteContract, useTargetNetwork } from "~~/hooks/scaffold-eth";
 import type { Trade } from "~~/hooks/weekend/useMarket";
 import { fmtToken, fmtUsd } from "~~/utils/weekend/format";
+import { SETTLE_GAS } from "~~/utils/weekend/gas";
 
 const Margin = ({ equity, maintenance }: { equity?: bigint; maintenance?: bigint }) => {
   const below = equity !== undefined && maintenance !== undefined && equity < maintenance;
@@ -65,7 +66,7 @@ export const TradesTable = ({ trades, priceIsBad }: { trades: Trade[]; priceIsBa
                     size="btn-xs"
                     tone="btn-secondary"
                     blockedBecause={noPrice}
-                    action={() => writeContractAsync({ functionName: "settle", args: [trade.id] })}
+                    action={() => writeContractAsync({ functionName: "settle", args: [trade.id], ...SETTLE_GAS })}
                   />
                   {trade.canLiquidate && (
                     <TxButton
@@ -74,7 +75,7 @@ export const TradesTable = ({ trades, priceIsBad }: { trades: Trade[]; priceIsBa
                       tone="btn-error"
                       blockedBecause={noPrice}
                       confirmText="This closes the whole trade. You earn the reward."
-                      action={() => writeContractAsync({ functionName: "liquidate", args: [trade.id] })}
+                      action={() => writeContractAsync({ functionName: "liquidate", args: [trade.id], ...SETTLE_GAS })}
                     />
                   )}
                 </div>

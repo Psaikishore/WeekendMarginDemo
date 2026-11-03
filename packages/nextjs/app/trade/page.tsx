@@ -13,12 +13,13 @@ import { useOpenOffers, useOpenTrades } from "~~/hooks/weekend/useMarket";
 import { useSystem } from "~~/hooks/weekend/useSystem";
 import { liquidationPrice } from "~~/utils/weekend/economics";
 import { fmtBps, fmtToken, fmtUsd, parseAmount, toNumber } from "~~/utils/weekend/format";
+import { SETTLE_GAS } from "~~/utils/weekend/gas";
 
 const ONE = 10n ** 18n;
 
 const TradePage: NextPage = () => {
   const { address } = useAccount();
-  const { names } = useDeployment();
+  const { names, mockFeed } = useDeployment();
   const { targetNetwork } = useTargetNetwork();
   const system = useSystem();
   const account = useAccountState(address);
@@ -80,7 +81,8 @@ const TradePage: NextPage = () => {
       {!address && <ConnectPrompt what="post or accept offers" />}
       {system.priceProblem && (
         <Notice tone="warning">
-          The Chainlink price is {system.priceProblem}, so new trades and settlement are waiting.
+          The {mockFeed ? "mock BTC price" : "Chainlink price"} is {system.priceProblem}, so new trades and settlement
+          are waiting.{mockFeed && " On this set, anyone can post a new price from the Controls page."}
         </Notice>
       )}
 
@@ -150,14 +152,14 @@ const TradePage: NextPage = () => {
                   label="Settle now"
                   tone="btn-secondary"
                   blockedBecause={priceBlock}
-                  action={() => writeContractAsync({ functionName: "settle", args: [myTrade.id] })}
+                  action={() => writeContractAsync({ functionName: "settle", args: [myTrade.id], ...SETTLE_GAS })}
                 />
                 <TxButton
                   label="Close the trade"
                   tone="btn-secondary"
                   blockedBecause={priceBlock}
                   confirmText="This settles at the current price and ends the trade for both sides."
-                  action={() => writeContractAsync({ functionName: "closeTrade", args: [myTrade.id] })}
+                  action={() => writeContractAsync({ functionName: "closeTrade", args: [myTrade.id], ...SETTLE_GAS })}
                 />
               </div>
             </>

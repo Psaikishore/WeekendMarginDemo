@@ -93,7 +93,9 @@ export const TxButton = ({
     setAsking(false);
     setBusy(true);
     try {
-      await action();
+      // The transactor returns nothing, without throwing, when the wallet is on the wrong network.
+      const hash = await action();
+      if (hash === undefined) return;
       onDone?.();
       await queryClient.invalidateQueries();
     } catch {

@@ -10,6 +10,7 @@ import { useAccountState } from "~~/hooks/weekend/useAccountState";
 import { useNow } from "~~/hooks/weekend/useNow";
 import { useSystem } from "~~/hooks/weekend/useSystem";
 import { fmtBps, fmtDuration, fmtToken, fmtUsd, parseAmount } from "~~/utils/weekend/format";
+import { WITHDRAW_GAS } from "~~/utils/weekend/gas";
 
 const FAUCET_COOLDOWN_SECONDS = 3600;
 
@@ -201,6 +202,7 @@ const MarginPage: NextPage = () => {
                   house.writeContractAsync({
                     functionName: usingSBill ? "withdrawSBill" : "withdrawUsdc",
                     args: [withdraw],
+                    ...WITHDRAW_GAS,
                   })
                 }
                 onDone={() => setWithdrawText("")}

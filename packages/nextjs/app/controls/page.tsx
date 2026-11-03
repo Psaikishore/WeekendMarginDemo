@@ -11,10 +11,14 @@ import { useScaffoldWriteContract, useTargetNetwork } from "~~/hooks/scaffold-et
 import { useNow } from "~~/hooks/weekend/useNow";
 import { useSystem } from "~~/hooks/weekend/useSystem";
 import { fmtBps, fmtDuration, fmtFundingRate, parseAmount, toNumber } from "~~/utils/weekend/format";
+import { MOCK_UPDATE_GAS } from "~~/utils/weekend/gas";
 
 const parseSigned = (text: string, decimals: number) => {
+  const trimmed = text.trim();
+  // parseUnits reads an empty field as zero, which would post a 0% rate by accident.
+  if (trimmed === "" || trimmed === "-") return undefined;
   try {
-    return parseUnits(text.trim(), decimals);
+    return parseUnits(trimmed, decimals);
   } catch {
     return undefined;
   }
@@ -201,6 +205,7 @@ const ControlsPage: NextPage = () => {
                   feed.writeContractAsync({
                     functionName: "updateAnswer",
                     args: [parseUnits(priceText.trim().replace(/,/g, ""), 8)],
+                    ...MOCK_UPDATE_GAS,
                   })
                 }
               />
