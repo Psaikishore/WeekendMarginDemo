@@ -27,8 +27,8 @@
   },
   "goToMarket": {
     "hedgeNotionalUsd": 100000000,
-    "productDiscountBps": 35,
-    "protocolShareOfDiscount": 0.2,
+    "productDiscountBps": 42,
+    "protocolShareOfDiscount": 0.25,
     "clearingFeeBpsPerSide": 1,
     "turnsPerYear": 12,
     "runningCostsUsd": {
