@@ -30,3 +30,6 @@ __pycache__
 # local rehearsals on `yarn chain`
 packages/hardhat/deployments/default
 packages/hardhat/demo-log.default-*.json
+
+# course material: never publish the brief (the repo is public)
+docs/Final Project Brief*.pdf

@@ -1,0 +1,621 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=2.4cm]{geometry}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{longtable}
+\usepackage{enumitem}
+\usepackage{xurl}
+\usepackage[hidelinks,colorlinks=true,linkcolor=black,urlcolor=blue!60!black,citecolor=black]{hyperref}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+
+\definecolor{ink}{HTML}{0B0B0B}
+\definecolor{muted}{HTML}{52514E}
+\definecolor{rule}{HTML}{C9C7C2}
+
+\titleformat{\section}{\large\bfseries}{\thesection}{0.7em}{}
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection}{0.6em}{}
+\setlist[itemize]{leftmargin=1.2em,itemsep=2pt,topsep=3pt}
+\setlist[enumerate]{leftmargin=1.4em,itemsep=2pt,topsep=3pt}
+\renewcommand{\arraystretch}{1.25}
+
+\pagestyle{fancy}\fancyhf{}
+\fancyhead[L]{\footnotesize\color{muted}Weekend Margin Clearinghouse — Going to Market}
+\fancyhead[R]{\footnotesize\color{muted}Team 9}
+\fancyfoot[C]{\footnotesize\color{muted}\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\newcommand{\note}[1]{{\small\color{muted}#1}}
+
+\begin{document}
+
+\begin{center}
+{\LARGE\bfseries Going to Market}\\[4pt]
+{\large An on-chain clearinghouse for perpetual swaps margined with tokenized T-bills}\\[10pt]
+{\normalsize FRE-GY 6931 Blockchain \& Cryptocurrency, Fall 2026 — Team 9}\\[2pt]
+{\small Sai Kishore (contracts, on-chain) \quad·\quad Swastik Mishra (analysis, product)}\\[2pt]
+{\small Prof.\ Richard Radnay \quad·\quad TA Hina Tomar \quad·\quad \today}
+\end{center}
+\vspace{4pt}
+\hrule
+\vspace{14pt}
+
+\section*{Executive summary}
+\addcontentsline{toc}{section}{Executive summary}
+
+Between 2024 and 2026 the market moved decisively toward tokenized Treasuries as derivatives
+collateral. Circle launched a 24/7 BUIDL-to-USDC contract in April 2024 \cite{circle}. Binance
+accepted Circle's USYC as off-exchange collateral in July 2025 and BlackRock's BUIDL that November
+\cite{binance,protofire}. Deribit and Crypto.com followed \cite{deribit}. In September 2026, CFTC
+staff confirmed that swap dealers may post tokenized money market fund shares as margin
+\cite{protofire}.
+
+Every one of those moves validates the premise this project was built on: institutions want to post
+interest-bearing collateral against derivatives, and the settlement calendar is what stands in the
+way.
+
+\textbf{What none of them does is unify the two halves.} Tokenized funds are issued without a
+clearing layer, and clearing venues operate without owning the collateral. BlackRock's fund does not
+know it is being used as margin; Deribit does not know what is inside it. The gap between them is
+bridged by intermediaries --- Ceffu, triparty banks, Circle's discretionary USDC reserve --- and each
+of those reintroduces precisely the counterparty risk and operating-hours constraint that
+tokenization was meant to remove.
+
+\textbf{We build both halves as one system.} Our clearinghouse natively understands its collateral's
+redemption calendar. When the issuer is unreachable, \texttt{settle()} routes through a permissionless
+vault that buys the collateral at a discount and redeems it when the issuer reopens. No custodian, no
+discretionary counterparty, no approval queue. The asset and the clearing layer are the same system
+and speak the same language, which is what makes automatic settlement possible at three in the
+morning on a Sunday.
+
+That is the novelty, and it determines the product. This is \textbf{non-custodial settlement liquidity
+for on-chain derivatives} --- built for venues where no central balance sheet exists to absorb a
+timing mismatch, which is exactly where the incumbent model cannot reach without becoming an
+intermediary again.
+
+Three quantitative conclusions follow, each developed below:
+
+\begin{enumerate}
+  \item \textbf{Break-even is \$134m of hedged notional}, supported by a \$26m vault — that vault
+  being about 0.2\% of the \$15bn tokenized treasury market.
+  \item \textbf{The deployed 10bp fee is not commercially viable.} The vault earns 1.21\% a year
+  against 4.01\% on T-bills. A real product needs 28--44bp, and the band where both sides agree is
+  narrow: 28--42bp.
+  \item \textbf{The design is economically impossible on Ethereum mainnet.} At 100 open trades the
+  keeper's gas alone costs \$1.90m a year, about sixty times the revenue those trades earn. On an L2 the same
+  workload costs \$2,078. This single constraint determines where the product can exist.
+\end{enumerate}
+
+\section{Market context}
+
+Tokenized U.S.\ Treasury products held roughly \$14.5--16bn in October 2026, growing about 125\% year
+over year \cite{allium,cryptonomist,utoday}. Allium counts 91 distinct assets from 36 issuers
+\cite{allium}. Circle's USYC is now reported as the largest single fund at approximately
+\$2.6--3bn, having overtaken BlackRock's BUIDL \cite{coincentral}.
+
+\note{Trackers disagree because on-chain token market capitalisation differs from fund AUM. We quote
+a range rather than a point estimate and cite three sources.}
+
+Two regulatory and market developments matter for us. First, derivatives venues began accepting these
+instruments as margin collateral: Binance added USYC in July 2025 and BUIDL in November 2025, holding
+units in off-exchange custody at Ceffu or a triparty bank \cite{binance,protofire}; Deribit and
+Crypto.com followed, with Deribit reported to apply a 2\% haircut \cite{deribit,protofire}. Second,
+CFTC staff guidance issued 24 September 2026 is reported to confirm that swap dealers may post
+tokenized money market fund shares as margin \cite{protofire}.
+
+\note{We could not confirm the CFTC item against a primary CFTC document. See Appendix B.}
+
+\section{Competitive landscape}
+
+\subsection{Three incumbent models}
+
+\textbf{Venue collateral (Binance, Deribit, Crypto.com).} The fund posts tokenized shares, accepts a
+haircut, and receives margin credit. When it loses money on a Saturday, the venue debits its
+collateral balance as an internal ledger entry. \emph{No cash moves.} The venue absorbs the timing
+mismatch on its own balance sheet and settles later.
+
+\textbf{Issuer off-ramp (Circle for BUIDL).} A single counterparty holds a USDC reserve and purchases
+shares around the clock \cite{circle}. It is structured as a secondary-market transfer rather than a
+fund redemption, so accrued interest still pays at the next distribution cycle \cite{techflow}.
+Reported reserve capacity is of the order of \$80--100m \cite{techflow,bitcoincom}.
+
+\textbf{Primary redemption (Securitize).} The conventional path: daily, business days, with a 3:00pm
+cutoff \cite{techflow}. This is the constraint our project was designed around, and it remains real.
+
+\subsection{Comparison}
+
+\begin{center}
+\small
+\begin{tabular}{@{}p{4.3cm}p{2.9cm}p{2.9cm}p{3.5cm}@{}}
+\toprule
+& \textbf{Circle off-ramp} & \textbf{Venue collateral} & \textbf{Weekend Vault (ours)} \\
+\midrule
+Liquidity provider & Circle & The venue & Any depositor \\
+Permission required & Securitize allowlist & Venue onboarding & None \\
+Discretionary & Yes & Yes & No — contract logic \\
+Capacity & \textasciitilde\$80--100m, one party & Venue balance sheet & Scales with deposits \\
+Serves on-chain perps & No & No & \textbf{Yes} \\
+Multi-issuer & BUIDL only & Per venue & Any ERC-20 with a NAV \\
+Fires automatically at margin call & No & N/A (ledger entry) & \textbf{Yes} \\
+Counterparty risk & Circle & Venue + custodian & Smart contract \\
+Operating history & \textasciitilde2.5 years & 1--2 years & \textbf{None} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{The structural gap}
+
+Incumbent solutions work because a trusted party absorbs the mismatch, and for users who can reach
+that party they work well. The limitation is structural rather than one of execution: the model
+requires an intermediary, so it cannot serve any venue that does not have one.
+
+Derivatives that clear on-chain are exactly that case. Our clearinghouse is bilateral with no central
+balance sheet, so a loss on a Saturday cannot be settled by moving a number in a ledger --- the cash
+has to move. That constraint is what produces the vault, and it is the position incumbents cannot
+occupy while remaining intermediaries.
+
+The deeper division is between layers. Issuance and clearing are built by different firms, on
+different infrastructure, under different regulators, and are stitched together after the fact by
+custodians and bilateral agreements. We treat them as one problem: the clearinghouse reads the
+collateral's liquidity state directly and routes settlement accordingly, with the vault as the
+counterparty of last resort. The course's requirement that every project mint and use its own token
+pushed us toward this design, and it turned out to be the more interesting half of the work.
+
+\section{Users}
+
+We identify four segments, ordered by how poorly incumbents serve them.
+
+\begin{enumerate}
+  \item \textbf{On-chain perpetual traders} (Hyperliquid, dYdX, GMX and similar). No central balance
+  sheet exists to absorb a weekend mismatch, so settlement requires real cash movement. This is the
+  primary market.
+  \item \textbf{Bilateral OTC derivatives between funds.} No clearer, same structural problem.
+  \item \textbf{Funds below BUIDL's access threshold.} BUIDL is offered under Section 3(c)(7) of the
+  Investment Company Act to qualified purchasers, with a reported \$5m minimum
+  \cite{ecokyc,coinpaprika}. Everyone beneath that line cannot use Circle's off-ramp at all.
+  \item \textbf{Holders of issuers nobody has integrated.} Ninety-one tokenized treasury products
+  exist \cite{allium}; the Circle off-ramp serves one.
+\end{enumerate}
+
+\textbf{What they get that they do not have today:} the ability to meet a variation margin call in
+cash, at any hour, without pre-funding an idle cash buffer and without asking anyone's permission.
+Section~\ref{sec:business} quantifies the benefit at up to 42bp against the realistic alternative.
+
+\section{Trust}
+
+\subsection{What a stranger can verify}
+
+All 16 deployed contracts are verified on Etherscan, confirmed through the Etherscan API, and the
+verified source matches the files in this repository. The test suite runs with one command and
+contains 37 tests, 25 of which expect a revert, plus three seeded randomised invariant runs checking that no tUSDC or
+sBILL is created or destroyed. OpenZeppelin is used throughout for the token, access control,
+\texttt{ReentrancyGuard} and \texttt{Pausable}.
+
+The code has been scanned with \textbf{Slither 0.11.6} against the deployment compiler. It returned
+26 findings on our own files. We fixed four — an uninitialised local in \texttt{liquidate}, two
+shadowed \texttt{owner} parameters, and an unindexed event address — and \texttt{docs/slither.md}
+explains each of the remaining 22 as a false positive or an accepted design choice, finding by
+finding. Independently, 28 values read from the live Sepolia contracts reconcile to the wei against
+the financial model.
+
+\textbf{sBILL is a mock.} It accrues a fixed 4\% and pays interest from a pre-funded reserve, so it demonstrates the integration rather than carrying real T-bill exposure. Section~\ref{sec:risks} sets out what a production issuer would require.
+
+\subsection{Admin powers, stated exactly}
+
+The owner may pause \emph{new} deposits and \emph{new} trades, and may post a funding rate within a
+cap fixed at deployment (0.1\% per hour). The owner \textbf{cannot} interfere with settlement,
+liquidation, trade closing or withdrawals, all of which continue while paused.
+
+\texttt{MarketCalendar} has no owner and no settings. Nobody, including us, can change when the
+weekend is. This was a deliberate choice against a specific attack: an admin able to repoint the
+calendar at a contract reporting ``always closed'' could force every settlement through the vault at
+a discount, brick fund redemptions, and raise the collateral haircut toward liquidation thresholds —
+three extraction routes from one key.
+
+\textbf{We disclose that the demonstration deployment is different.} It uses a separately labelled
+\texttt{DemoCalendar} whose weekend is switched by the deployer, so the mechanism can be shown on any
+day. The production design is the admin-free calendar.
+
+\subsection{What the interface does to stop costly mistakes}
+
+A clearinghouse that is correct on-chain and opaque in the browser is not trustworthy. The front end
+carries four specific protections, each of which can be inspected in the repository.
+
+\begin{itemize}
+  \item \textbf{Readable error messages.} \texttt{utils/weekend/errors.ts}
+  maps 27 custom errors — ours and OpenZeppelin's — to sentences that say what happened and what to
+  do, plus fallbacks for a rejected signature and insufficient gas. It is wired into the shared
+  transaction path at \texttt{utils/scaffold-eth/contract.ts:345}, so it covers every call the
+  application can make rather than a hand-picked few. A user who posts too large a trade reads
+  ``Your margin is too low for this. Deposit more, or use a smaller size,'' not
+  \texttt{InsufficientMargin(1, 2)}.
+  \item \textbf{Clear confirmations on irreversible actions.} The shared button component takes a
+  \texttt{confirmText}; the first click only asks, so the action needs two clicks. It guards the
+  four actions that cannot be undone: opening a trade, closing one, liquidating a counterparty,
+  and pausing the system. Closing reads
+  ``This settles at the current price and ends the trade for both sides.''
+  \item \textbf{Impossible actions are disabled with a stated reason, not left to fail on-chain.}
+  There are 24 \texttt{blockedBecause} guards across the five application pages and the shared
+  components. A button that cannot work is greyed out and says why — no wallet connected, the price
+  is stale, the amount is empty, owner-only — so the user never pays gas to discover a revert.
+  \item \textbf{The liquidation price is shown before the trade is opened,} not after. The trade
+  page computes ``You'd be liquidated around \$X'' from the same formula the contract uses, for both
+  sides, as the size and margin inputs change. When the Chainlink price is stale or unset, a warning
+  banner states that new trades and settlement are waiting.
+  \item \textbf{Slippage limits are unnecessary here, by construction.} There is no pool and no
+  order book to walk, so there is no price impact to bound. A trade opens at the Chainlink price both
+  sides can read before committing, and a weekend sale to the vault executes at NAV minus a discount
+  fixed in contract storage. The user's fill is deterministic and knowable in advance, which is a
+  stronger guarantee than a slippage tolerance. The honest counterpart is that the price is only as
+  good as the oracle, which is why the two-hour staleness check and the banner above exist.
+\end{itemize}
+
+\textbf{What we have not done.} Every flow was exercised on a local chain with a test wallet, and on
+Sepolia the pages read the live contracts correctly, but no transaction has yet been sent from the
+deployed site through MetaMask. We state this rather than imply coverage we do not have.
+
+\subsection{Failure modes}
+
+We state these rather than conceal them. All are safe failures — the system stops rather than
+transacting on bad data — but each is a real limitation.
+
+\begin{itemize}
+  \item \textbf{Stale price feed.} Any Chainlink answer older than two hours is rejected. Settlement,
+  liquidation and withdrawals from accounts with open trades revert until a fresh price arrives.
+  \item \textbf{Vault exhausted.} If the vault lacks cash, \texttt{settle()} and \texttt{liquidate()}
+  revert until cash arrives or the market reopens.
+  \item \textbf{No insurance fund.} A sufficiently large gap move can leave a winner underpaid.
+  \item \textbf{Holiday blindness.} The calendar is day-of-week only, so on a bond market holiday the
+  contract believes the market is open. With a real tokenized fund, settlement would stick until the
+  next business day. Section~\ref{sec:risks} and the report's design-decisions section develop this.
+\end{itemize}
+
+\section{Promotion: the first hundred users}
+
+Generic community-building is not a plan here, because the binding constraint is not awareness.
+
+\begin{itemize}
+  \item \textbf{Issuer integration is step one, not marketing.} BUIDL's token contract blocks
+  transfers to wallets not on a Securitize-administered allowlist \cite{ecokyc,coinpaprika}. The vault
+  and clearinghouse must be approved holders before a single real user can exist. This is a business
+  development conversation, and it gates everything else.
+  \item \textbf{Launch where the allowlist is not.} Franklin Templeton's BENJI sets minimum initial
+  investments by chain: \$20 on Stellar, \$100 on Aptos, \$1,000 on Polygon, \$20,000 on Avalanche and
+  \$5,000,000 on Ethereum \cite{franklin}. Our Ethereum-based design sits in the most restrictive
+  tier. A cheaper chain resolves the access barrier and the gas constraint simultaneously.
+  \item \textbf{Seed the vault ourselves.} This is a two-sided market with a cold-start problem: no
+  vault, no settlement guarantee; no traders, no fee income. The first \$1m of vault capital has to
+  come from the operator.
+  \item \textbf{Integrate rather than acquire.} The realistic route to users is as a settlement module
+  inside an existing on-chain perpetuals venue, not as a destination users navigate to.
+  \item \textbf{Incentives, pointed at the short side of the market.} This is a two-sided product and
+  only one side is scarce. Hedging funds arrive on their own, because the alternative is an idle cash
+  buffer costing them up to 42bp. Vault depositors do not: they are asked to accept T-bills plus
+  roughly 40bp for contract risk, which is a thin offer from an operator with no history. So the
+  incentive budget goes to depositors, not traders: the protocol waives its 25\% share of the
+  discount for the first year, which lifts the depositor's return from 4.41\% to 5.76\% and costs us
+  revenue we would not have earned anyway at sub-scale volume. Trading incentives would be spent on
+  the side that does not need them.
+\end{itemize}
+
+\subsection{The token, and why it is not a campaign}
+
+Our minted token is \textbf{sBILL}, the ERC-20 tokenized T-bill share. It is the collateral the
+system exists to clear, not an instrument of promotion: it has a NAV, it is redeemed at that NAV, and
+nothing about it is speculative by construction.
+
+We deliberately do not issue a governance or reward token, and the reason is specific to this
+product rather than a general objection. The entire value proposition is that a fund can post
+collateral and be certain of what it will realise. A token that subsidises deposits makes the
+vault's advertised return partly a function of that token's price, which reintroduces exactly the
+volatility the customer came here to remove. A depositor earning ``4.41\% plus an uncertain amount of
+a governance token'' cannot price the product against T-bills, and pricing against T-bills is the
+only comparison that matters here.
+
+The promotional asset is therefore the \textbf{live reconciliation}, not a token launch: 28 numbers
+read off the deployed contracts matching the model to the wei, and a weekend settlement that anyone
+can replay on Etherscan. For an audience of risk officers, a verifiable number is worth more than an
+airdrop.
+
+\section{Business model}\label{sec:business}
+
+\subsection{Where the revenue comes from}
+
+The vault buys collateral at NAV minus a discount while the issuer is unreachable and redeems at full
+NAV when it reopens. It earns the discount plus the interest the asset accrues while held — tokenized
+treasuries accrue continuously, including weekends, even though they cannot be redeemed. Per \$1 of
+vault capital, with the pool sized to cover 99\% of weekends — which leaves it 24.7\% utilised on
+average — and a 4.01\% T-bill yield:
+
+\begin{center}
+\small
+\begin{tabular}{@{}lrrrp{3.5cm}@{}}
+\toprule
+\textbf{Discount} & \textbf{Income} & \textbf{Carry} & \textbf{Total} & \\
+\midrule
+10bp (as deployed) & 1.29\% & 0.36\% & \textbf{1.65\%} & loses to T-bills \\
+28bp & 3.60\% & 0.36\% & \textbf{3.96\%} & matches T-bills \\
+42bp (our price) & 5.40\% & 0.36\% & \textbf{5.76\%} & before our share \\
+44bp & 5.66\% & 0.36\% & \textbf{6.02\%} & T-bills $+$ 2\% \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{At the deployed 10bp the vault loses to its own alternative}, earning 1.65\% against 4.01\% on
+T-bills. The cause is not the weekend — it is that three quarters of the vault's capital is idle on a
+normal weekend. Our financial analysis establishes the per-use cost at only 6.6bp, which 10bp covers
+comfortably. The shortfall is entirely the cost of waiting, and it is why the contract was deployed
+with an owner-adjustable discount: the owner can raise it up to a hard limit of 1\%, only while the
+market is open, without redeploying.
+
+\subsection{The band where a deal exists}
+
+Our analysis derives both sides of the price. The vault requires 28--44bp serving both directions from
+one pool. The fund will pay up to 119bp against holding everything in cash, 42bp against the realistic
+alternative of a cash buffer, and only 16bp against a fund disciplined enough to sell T-bills every
+Friday.
+
+\begin{center}
+\begin{tabular}{@{}lr@{}}
+\toprule
+\textbf{Constraint} & \textbf{Discount (bp)} \\
+\midrule
+Vault must earn at least (both directions, match T-bills) & 28 \\
+Vault must earn at least (both directions, T-bills + 2\%) & 44 \\
+Fund will pay at most (vs.\ cash buffer) & 42 \\
+Fund will pay at most (vs.\ weekly T-bill sales) & 16 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{A workable price exists between 28 and 42bp, and only against the cash-buffer alternative.}
+Against a weekly-sale strategy there is no overlap at all. This is a narrow business, and we report it
+as such.
+
+\subsection{What we charge, and who it has to satisfy}
+
+Three parties must all be satisfied by one number, and the window is narrow.
+
+\begin{center}
+\begin{tabular}{@{}p{8.6cm}r@{}}
+\toprule
+\textbf{Constraint} & \textbf{Discount (bp)} \\
+\midrule
+Vault must earn at least this to match T-bills (both directions, one pool) & 28 \\
+Vault must earn at least this for T-bills $+$ 2\% & 44 \\
+\textbf{Fund will pay at most this, against a cash buffer} & \textbf{42} \\
+Fund will pay at most this, against weekly T-bill sales & 16 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{We price at 42bp, the top of the window, and the protocol takes 25\% of it.} That leaves
+depositors 31.5bp, which the model turns into \textbf{4.41\% a year against 4.01\% on T-bills}.
+
+Two things follow, and we state both. First, the fund's 42bp ceiling sits \emph{below} the 44bp the
+vault would need to pay depositors a 2\% risk premium — so at no price does this product clear a
+conventional hurdle rate. It clears a T-bill-flat hurdle with about 40bp to spare, and that is the
+honest description of the opportunity. Second, pricing at the customer's ceiling leaves no room to
+absorb a rate move, which is why Section~\ref{sec:risks} treats rate dependence as a first-order
+risk rather than a footnote.
+
+\subsection{Break-even volume}
+
+Costs are modelled explicitly rather than as a range.
+
+\begin{center}
+\begin{tabular}{@{}lrp{7.2cm}@{}}
+\toprule
+\textbf{Annual cost} & \textbf{Amount} & \textbf{Basis} \\
+\midrule
+Infrastructure and keepers & \$24{,}000 & Hosting, RPC and monitoring. Keeper gas itself is only about \$1{,}900 a year at 100 open trades on an L2 \\
+Security audits & \$60{,}000 & Mid-range for a focused DeFi protocol; published 2026 guidance spans roughly \$15k--\$100k \cite{sherlock} \\
+Legal and compliance & \$120{,}000 & Entity, counsel, and the issuer agreements Section~5 shows are mandatory \\
+Team & \$300{,}000 & Two engineers \\
+\midrule
+\textbf{Total} & \textbf{\$504{,}000} & \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Revenue has two legs. The vault leg is the protocol's share of the discount actually earned, which
+depends on how much collateral is sold through the vault — on average 2.50\% of a hedge's notional
+per weekend. The clearing leg is 1bp per side, charged each time a position is opened or rolled,
+assumed twelve times a year. That fee sits well under the 4.5--5bp taker fees at Hyperliquid and
+dYdX, which is appropriate: we are a settlement layer beneath a venue, not the venue.
+
+\begin{center}
+\begin{tabular}{@{}lr@{}}
+\toprule
+\textbf{Per \$1m of hedged notional, per year} & \\
+\midrule
+Vault fees (25\% of a 42bp discount) & \$1{,}366 \\
+Clearing fees (1bp $\times$ 2 sides $\times$ 12 turns) & \$2{,}400 \\
+\midrule
+\textbf{Total} & \textbf{\$3{,}766} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{Break-even is \$134m of hedged notional.} At a \$200m target the protocol earns \$753{,}277
+against \$504{,}000 of costs, and the vault behind it needs \$39.4m of cash — 19.7\% of notional,
+the level that covered 99\% of historical weekends when longs and shorts are served from one pool.
+Pooling the two sides rather than running separate books saves 29\% of the capital, which is the
+single largest efficiency in the design.
+
+Note which leg carries the business: \textbf{clearing fees are 64\% of revenue}. The vault is what
+makes the product possible, but a flat per-trade fee is what pays for it. A reader who disbelieves
+our discount analysis entirely still finds a business at \$210m of notional on clearing fees alone.
+
+\subsection{The gas constraint}
+
+Our keeper settles each open trade hourly. This cost is absent from our financial analysis and it is
+decisive. Using the measured cost of a settlement paid in tUSDC, 72,188 gas (\texttt{docs/gas.md},
+median from \texttt{yarn test}), at 10 gwei and \$3,000 ETH:
+
+\begin{center}
+\begin{tabular}{@{}lrr@{}}
+\toprule
+\textbf{Open trades} & \textbf{Ethereum mainnet} & \textbf{L2 (\textasciitilde1000\(\times\) cheaper)} \\
+\midrule
+2 & \$37,942 & \$38 \\
+100 & \textbf{\$1,897,101} & \$1,897 \\
+1,000 & \$18,971,006 & \$18,971 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+At 100 open trades, mainnet gas alone costs \$1.90m a year. Those trades are perhaps \$8m of
+notional at the demo's size, which earns about \$30{,}000 of revenue — the gas is sixty times the
+income. \textbf{The product cannot exist on Ethereum mainnet.} On an L2 the identical workload costs
+\$1,897, which is immaterial, and it is the reason the \$24{,}000 infrastructure line in
+Section~\ref{sec:business} is dominated by hosting rather than by gas.
+
+The same arithmetic decides whether liquidation works. The reward is 50bp of notional and
+\texttt{liquidate} costs 170,636 gas, so on mainnet a liquidator breaks even at about \$1{,}024 of
+notional and below that no rational keeper acts. On an L2 the threshold is about \$1, so the
+incentive holds at any size a user would trade.
+
+This is the single most consequential finding in our go-to-market work. It does not change the
+contracts, but it determines where they can be deployed, and it compounds with the BENJI access tiers
+in Section~5: the cheaper chain is both the regulatory entry point and the only viable gas regime.
+
+\section{Risks}\label{sec:risks}
+
+\begin{enumerate}
+  \item \textbf{Incumbents extend downward.} If Circle widens its off-ramp beyond BUIDL, or on-chain
+  venues negotiate their own issuer arrangements, the gap we occupy closes. We consider this the most
+  likely adverse outcome.
+  \item \textbf{Holder restrictions.} Tokenized funds restrict who may hold them. BUIDL enforces a
+  Securitize allowlist at the token contract \cite{ecokyc,coinpaprika}; BENJI shares are held in
+  KYC'd registered accounts with chain-dependent minimums \cite{franklin}. Our vault and
+  clearinghouse would both require approved-holder status, and vault depositors might require KYC.
+  Our design limits the damage: sBILL moves only to the vault or back to the fund, never to a
+  liquidator, so no unapproved transfer path exists.
+  \item \textbf{Thin economics.} The viable band is 28--42bp and disappears entirely against a fund
+  that sells T-bills weekly.
+  \item \textbf{Interest rate dependence.} At 2021 rates of 0.05\%, a user of this product would have
+  \emph{lost} approximately \$2,222 a year on a \$1m hedge. The product requires meaningful
+  short-term rates.
+  \item \textbf{Gas regime.} Mainnet is not viable, so the business inherits the security and
+  liquidity assumptions of whichever L2 it deploys to.
+  \item \textbf{Regulatory ambiguity.} The September 2026 CFTC staff guidance reportedly legitimises
+  tokenized money market fund collateral for \emph{swap dealers} — that is, for the intermediated
+  model we are positioned against \cite{protofire}.
+  \item \textbf{A market downturn exhausts the vault before it threatens the fee.} Our regime
+  testing puts numbers on this. Sizing the vault at the 95th percentile of weekend moves gives
+  \$93{,}522 of capacity per \$1m of notional, and \textbf{four of the seven historical crises we
+  tested exceed it} — the August 2024 yen-carry unwind needed 218\% of capacity, the June 2022 CPI
+  shock 204\%, the SVB weekend 145\% and the May 2021 mining ban 137\%. When the vault empties,
+  \texttt{settle()} reverts and settlement waits for Monday. This is the binding constraint on the
+  business, and it is a capital question rather than a pricing one: the fee is comfortable in every
+  one of those weekends, and the cash is not.
+  \item \textbf{Exploit.} The contracts are unaudited. Slither reports 26 findings, of which we
+  fixed four and explain 22; the single High-severity item is a false positive, where the tool reads
+  the modulo in \texttt{MarketCalendar} as weak randomness when it is arithmetic on a timestamp. Four
+  \texttt{reentrancy-no-eth} findings remain by choice: state is written after external calls, but
+  every entry point is \texttt{nonReentrant}, the callees are our own contracts fixed at deployment,
+  and the ERC-20s here have no transfer hooks. That reasoning is sound for our tokens and would need
+  revisiting against a production issuer whose token may have hooks or a blocklist. An external audit
+  is budgeted at \$60{,}000 in Section~\ref{sec:business} and has not been performed.
+
+  Two further weaknesses we found ourselves rather than inherited. \texttt{WeekendVault} emits its
+  redemption profit as an unsigned value, so a loss is reported as zero and a depositor reading the
+  event log cannot distinguish breaking even from losing money; emitting a signed
+  \texttt{int256} fixes it. And because vault inventory is held at cost, a depositor who times a
+  deposit just before Monday's redemption collects a share of a profit they bore no risk for. Neither
+  is an exploit in the sense of letting an attacker take funds, and both are real.
+  \item \textbf{Operating history.} We have none. Every competitor named here has one to
+  two years of production operation. Our evidence is a single live run: one weekend settlement
+  through the vault, one liquidation against a mock price, and 28 reconciled values.
+\end{enumerate}
+
+\appendix
+\section{Assumptions}
+
+\begin{center}
+\small
+\begin{tabular}{@{}p{4.1cm}p{3.3cm}p{7.6cm}@{}}
+\toprule
+\textbf{Assumption} & \textbf{Value} & \textbf{Basis} \\
+\midrule
+Vault average utilisation & 24.7\% & Measured over 304 weekends, pool sized at the 99th percentile \\
+Vault sizing & 19.7\% of notional & 99th percentile, pooled both directions \\
+Discount charged & 42bp & The fund's ceiling against a cash buffer \\
+Protocol share of discount & 25\% & Chosen so depositors still clear T-bills; the ceiling is 36\% \\
+Clearing fee & 1bp per side, 12 turns & Below the 4.5--5bp taker fees at Hyperliquid and dYdX \cite{hlfees} \\
+Operating cost & \$504k/yr & Itemised in \S\ref{sec:business}; team is \$300k of it \\
+Settlement gas & 72,188 & Measured, \texttt{yarn test} median, \texttt{docs/gas.md} \\
+Gas price / ETH & 10 gwei / \$3,000 & Illustrative \\
+L2 cost factor & \textasciitilde1000\(\times\) cheaper & Order-of-magnitude \\
+T-bill yield & 4.01\% & FRED DTB3, 28 Oct 2026 \\
+Vault hurdle & T-bills, not T-bills $+$ 2\% & A 2\% premium needs 44bp, above the fund's 42bp ceiling \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{Source verification status}
+
+Much of the competitive information is secondary reporting and sources conflict. We record
+confidence explicitly rather than presenting all claims as equally established.
+
+\begin{center}
+\small
+\begin{tabular}{@{}p{7.0cm}lp{4.3cm}@{}}
+\toprule
+\textbf{Claim} & \textbf{Confidence} & \textbf{Action} \\
+\midrule
+Circle BUIDL\(\rightarrow\)USDC contract exists, April 2024 & High & Primary press release \cite{circle} \\
+BUIDL restricted to qualified purchasers, allowlisted & High & Multiple sources agree \\
+BENJI chain-tiered minimums & High & SEC filing \cite{franklin} \\
+Tokenized treasuries \$14.5--16bn & Medium & Trackers disagree; range quoted \\
+Binance USYC July 2025, BUIDL Nov 2025 & Medium & One source dates USYC to 2024 \\
+Deribit 2\% haircut on BUIDL & Medium & Single secondary source \\
+Deribit/Crypto.com integration date & \textbf{Low} & Sources give Q1 2026 and July \\
+Circle reserve \textasciitilde\$80--100m & \textbf{Low} & 2024 figures, may be stale \\
+CFTC guidance 24 Sept 2026 & \textbf{Low} & \textbf{Not confirmed against primary source} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\note{Items marked Low must be verified against primary sources — venue collateral documentation,
+Circle's current documentation, and the CFTC's own releases — before this section is considered
+final.}
+
+\begin{thebibliography}{99}
+\footnotesize\sloppy\emergencystretch=3em
+\bibitem{circle} Circle, ``Circle Announces USDC Smart Contract for Transfers by BlackRock,''
+Businesswire, 11 April 2024. \url{https://www.businesswire.com/news/home/20240411966052/en/Circle-Announces-USDC-Smart-Contract-for-Transfers-by-BlackRock}
+\bibitem{binance} Cointelegraph, ``Binance adds BlackRock's BUIDL as off-exchange collateral for
+institutional traders.'' \url{https://cointelegraph.com/news/binance-blackrock-buidl-off-exchange-collateral-traders}
+\bibitem{deribit} Cointelegraph, ``Deribit, Crypto.com integrate BlackRock's BUIDL as trading
+collateral.'' \url{https://cointelegraph.com/news/deribit-crypto-com-accepting-blackrock-buidl-collateral}
+\bibitem{protofire} Protofire, ``Lending Against Tokenized Assets: Aave vs Morpho.''
+\url{https://protofire.io/guides/lending-against-tokenized-assets/}
+\bibitem{allium} Allium, ``Tokenized Treasuries Market Size: \$16B Across 91 Funds,'' 12 October 2026.
+\url{https://www.allium.so/blog/tokenized-treasuries-market-size-16b-and-counting/}
+\bibitem{cryptonomist} Cryptonomist, ``Tokenized US Treasuries Reach \$15.42B Value in 2026,''
+18 October 2026. \url{https://en.cryptonomist.ch/2026/10/18/tokenized-us-treasuries-market-2026/}
+\bibitem{utoday} U.Today, ``Cryptorank: Tokenized US Treasuries Hold \$14.7 Billion as RWA Market
+Expands.'' \url{https://u.today/cryptorank-tokenized-us-treasuries-hold-147-billion-as-rwa-market-expands}
+\bibitem{coincentral} CoinCentral, ``Circle USYC Overtakes BlackRock BUIDL as Largest Tokenized
+Treasury Fund.'' \url{https://coincentral.com/circle-usyc-overtakes-blackrock-buidl-as-largest-tokenized-treasury-fund/}
+\bibitem{ecokyc} Eco, ``Tokenized Treasury KYC Requirements 2026: BUIDL, OUSG, BENJI Access Tiers.''
+\url{https://eco.com/support/en/articles/15254021-tokenized-treasury-kyc-requirements-2026-buidl-ousg-benji-access-tiers}
+\bibitem{coinpaprika} Coinpaprika, ``BlackRock BUIDL Explained: Tokenized Fund by Securitize.''
+\url{https://coinpaprika.com/education/blackrock-buidl-explained-tokenized-fund-by-securitize/}
+\bibitem{franklin} Franklin Templeton Trust, Form 485BPOS, U.S.\ Securities and Exchange Commission.
+\url{https://www.sec.gov/Archives/edgar/data/0001786958/000165558926000970/c485bpos.htm}
+\bibitem{techflow} TechFlow, ``Understanding BlackRock's Tokenized Fund Experiment BUIDL: Model,
+Current Status, and Challenges.'' \url{https://www.techflowpost.com/en-US/article/20976}
+\bibitem{bitcoincom} Bitcoin.com News, ``Circle Unveils Smart Contract Service for Blackrock BUIDL
+Holders to Convert to USDC.'' \url{https://news.bitcoin.com/circle-unveils-smart-contract-service-for-blackrock-buidl-holders-to-convert-to-usdc/}
+\bibitem{rwaxyz} RWA.xyz, Tokenized Treasuries. \url{https://app.rwa.xyz/treasuries}
+\bibitem{sherlock} Sherlock, ``Smart Contract Audit Pricing: A Market Reference for 2026.''
+\url{https://www.sherlock.xyz/post/smart-contract-audit-pricing-a-market-reference-for-2026}
+\bibitem{hlfees} Hyperliquid and dYdX published perpetual fee schedules, base tier: taker 4.5bp and
+5.0bp respectively. \url{https://app.hyperliquid.xyz/docs}
+\end{thebibliography}
+
+\end{document}

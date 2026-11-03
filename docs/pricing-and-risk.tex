@@ -1,0 +1,833 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=2.4cm]{geometry}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{longtable}
+\usepackage{enumitem}
+\usepackage{xurl}
+\usepackage{amsmath}
+\usepackage[hidelinks,colorlinks=true,linkcolor=black,urlcolor=blue!60!black,citecolor=black]{hyperref}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+
+\definecolor{ink}{HTML}{0B0B0B}
+\definecolor{muted}{HTML}{52514E}
+\definecolor{rule}{HTML}{C9C7C2}
+
+\titleformat{\section}{\large\bfseries}{\thesection}{0.7em}{}
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection}{0.6em}{}
+\setlist[itemize]{leftmargin=1.2em,itemsep=2pt,topsep=3pt}
+\setlist[enumerate]{leftmargin=1.4em,itemsep=2pt,topsep=3pt}
+\renewcommand{\arraystretch}{1.25}
+
+\pagestyle{fancy}\fancyhf{}
+\fancyhead[L]{\footnotesize\color{muted}Weekend Margin Clearinghouse — Pricing and Risk}
+\fancyhead[R]{\footnotesize\color{muted}Team 9}
+\fancyfoot[C]{\footnotesize\color{muted}\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\newcommand{\note}[1]{{\small\color{muted}#1}}
+\newcommand{\bp}{\,\text{bp}}
+
+\begin{document}
+
+\begin{center}
+{\LARGE\bfseries Pricing and Risk}\\[4pt]
+{\large Where every number comes from, and every case it has to survive}\\[10pt]
+{\normalsize FRE-GY 6931 Blockchain \& Cryptocurrency, Fall 2026 — Team 9}\\[2pt]
+{\small Sai Kishore (contracts, on-chain) \quad·\quad Swastik Mishra (analysis, product)}\\[2pt]
+{\small Prof.\ Richard Radnay \quad·\quad TA Hina Tomar \quad·\quad \today}
+\end{center}
+\vspace{4pt}
+
+\hrule
+\vspace{10pt}
+
+\section*{How to read this document}
+
+There are two classes of number in this project, and keeping them apart is the whole
+point of this document.
+
+\textbf{The contract's parameters were chosen.} Eight values are fixed in the deployment,
+and five of them set the economics: the 10bp vault discount, the 20\%/10\% initial and
+maintenance margin pair, and the 1\%/3\% collateral haircut. They were set by engineering
+judgement when the contracts were written, committed before any of the analysis below
+existed. Four of the five are immutable on Sepolia; the discount alone can be raised by the owner,
+up to a hard cap set at deployment. They are the \emph{subject} of this analysis,
+not its output.
+
+\textbf{Everything in this document is derived.} The 6.28bp requirement, the 32.9bp break
+point, the 0.456-year duration limit, the 3.98\% typical closure and every figure in
+Section~\ref{sec:provenance} come out of the two data series in \S1.1. None was chosen,
+and none was adjusted to flatter a parameter.
+
+That ordering — parameters first, measurement second — is the honest one and also the
+demanding one: the analysis could have found the chosen values indefensible, and had to be
+run in a way that would have shown it. This document does three things with them.
+
+\begin{enumerate}
+\item \textbf{Shows where each one came from} — which data series, which formula, which
+      judgement call, and which of those judgements is doing the most work.
+\item \textbf{Walks every case} — from a median weekend to the worst weekend in eleven
+      years of data, in dollars, one step at a time.
+\item \textbf{Says where each number breaks} — the exact input value at which it stops
+      working, and whether history has already reached that value.
+\end{enumerate}
+
+Section~\ref{sec:provenance} is a line-by-line provenance table: every figure quoted
+anywhere in our write-up, its source, and the one line of arithmetic that produces it.
+Nothing in this document was typed by hand; Appendix~\ref{sec:repro} reproduces all of it
+from the cached data files.
+
+Two results are worth stating up front, because they are what the exercise was for.
+
+\textbf{The fee is correctly sized, and we can prove where it stops being correct.} 10bp
+against a 6.28bp requirement is $1.59\times$ coverage, and we locate the break point of
+every input that feeds it. Two of the four matter; the other two have two to three times
+the headroom they need and can be argued about freely without changing a conclusion.
+Knowing which is which is the difference between a priced product and a guessed one, and
+it is also why one candidate term is deliberately absent: a risk we cannot estimate is
+named in \S\ref{sec:unpriced} rather than given an invented number in the fee.
+
+\textbf{And the analysis found the binding constraint, which is not the fee.} Across all
+seven historical crises we tested, what threatens the system is the vault running out of
+cash — a liquidity limit that sits in the vault's \emph{sizing}, not in its pricing. That
+is a more valuable finding than a confirmation would have been: it moves the design
+question from ``is 10bp enough?'', which we can now answer yes, to ``how much capital
+stands behind it?'', which is where the remaining work belongs. Section~\ref{sec:limits}
+develops both.
+
+\section{Inputs}
+
+\subsection{Data}
+
+Four series, cached in \texttt{docs/data/} so every figure is reproducible without a
+network call.
+
+\begin{center}
+\small
+\begin{tabular}{@{}p{3.6cm}p{3.1cm}p{3.0cm}p{4.6cm}@{}}
+\toprule
+\textbf{Series} & \textbf{Source} & \textbf{Coverage} & \textbf{Used for} \\
+\midrule
+3-month T-bill yield (DTB3) & FRED, daily, discount basis actual/360 & 2015-01-02 to 2026-10-23, 3{,}085 obs & Weekend yield shocks; the current yield $y$ \\
+BTC/USD hourly & Coinbase, OHLC & 2021-01-01 to 2026-10-23, 51{,}070 bars & Closure moves, regime stress, liquidation tests \\
+BTC perp funding, hourly & Deribit & matched to the above & Funding-rate realism check \\
+Sepolia reconciliation & our own deployment & 28 reads & Confirming the settings below match the deployed contracts \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Settings}
+
+These are not assumptions. Each is read back off the deployed contract in Section~F
+of the notebook and matched against the value used here.
+
+\begin{center}
+\small
+\begin{tabular}{@{}p{5.4cm}p{2.2cm}p{7.4cm}@{}}
+\toprule
+\textbf{Setting} & \textbf{Value} & \textbf{Where it binds} \\
+\midrule
+Initial margin & 20\% & Caps opening leverage at $5\times$ \\
+Maintenance margin & 10\% & Liquidation trigger \\
+Haircut, market open & 1\% & sBILL counted at 99\% of NAV \\
+Haircut, market closed & 3\% & sBILL counted at 97\% of NAV \\
+sBILL interest & 4.00\% simple & Accrues on wall-clock, weekends included \\
+Vault discount & 10bp & Vault buys sBILL at NAV${}\times0.999$. Owner-adjustable up to a 1\% cap, only while the market is open \\
+Liquidation reward & 50bp & Paid to the liquidator \\
+Funding cap & 10bp/hour & Largest rate the owner can post \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Judgement parameters}
+
+Six inputs are genuine judgement calls. Five of them are currently buried as function
+defaults in the notebook rather than declared alongside the settings — a presentation
+flaw we name here because these are precisely the numbers a reader should be allowed to
+disagree with.
+
+\begin{center}
+\small
+\begin{tabular}{@{}p{4.5cm}p{1.9cm}p{8.6cm}@{}}
+\toprule
+\textbf{Parameter} & \textbf{Value} & \textbf{Basis} \\
+\midrule
+Closure length & 65 hours & Friday 4pm ET to Monday 9am ET. \texttt{MarketCalendar} closes Friday 21:00 to Monday 14:00 UTC, the same 65 hours, so contract and analysis agree. \\
+Hurdle premium & 2.00\% & What a vault depositor should want \emph{above} T-bills for taking contract and liquidity risk. Assumed, not observed. \\
+Collateral duration & 0.25 yr & Assumes 3-month paper. Section~\ref{sec:breaks} shows this is the tightest assumption in the model. \\
+P(long weekend) & 9/52 & Nine of fifty-two closures are extended by a Monday holiday or Good Friday. \\
+Extra hours if long & 24 & One additional day of capital lock-up. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{What actually happens in a closure}
+
+Before the arithmetic, the mechanism. A perpetual swap settles hourly. When the market is
+open and a trader's margin falls short, the clearinghouse redeems their sBILL with the
+issuer at full NAV. When the market is closed the issuer is unreachable, so the
+clearinghouse sells the sBILL to our vault instead, at a discount.
+
+\begin{enumerate}
+\item \textbf{Friday 4pm ET.} The T-bill market closes. The clearinghouse switches the
+      haircut from 1\% to 3\%, so every sBILL-backed position is now counted slightly
+      more conservatively.
+\item \textbf{Each hour of the closure.} The price moves. The losing side owes cash and
+      holds none, so \texttt{\_collect()} routes to the vault: the vault pays cash, and
+      takes sBILL worth slightly more than the cash it paid.
+\item \textbf{Monday 9am ET.} The issuer reopens. The vault calls
+      \texttt{redeemInventory()}, hands the sBILL back at NAV, and books the difference.
+\end{enumerate}
+
+The vault is therefore a weekend \emph{liquidity} provider, not a trader. It earns the
+discount, earns the T-bill interest for the hours it holds the paper, and carries the
+price risk of that paper across the closure. Those three terms are the whole pricing
+problem.
+
+\subsection{The decomposition}
+
+Per \$1 of cash the vault actually deploys, over a closure of $h$ hours:
+
+\[
+\underbrace{\frac{(y+\pi)h}{8760}}_{\text{gross carry}}
+\;-\;\underbrace{\frac{yh}{8760}}_{\text{sBILL accrual}}
+\;+\;\underbrace{D\cdot\Delta y}_{\text{price risk}}
+\;+\;\underbrace{p_{\ell}\frac{(y+\pi)h_{\text{extra}}}{8760}}_{\text{long-weekend risk}}
+\;=\;\text{required discount}
+\]
+
+with $y$ the T-bill yield, $\pi$ the hurdle premium, $D$ duration, $\Delta y$ the weekend
+yield shock, and the last term the cost of a Monday holiday extending the closure.
+
+$\Delta y$ is an \textbf{empirical percentile, not a standard deviation}, and the choice is
+deliberate. The standard deviation of weekend moves is 4.17bp, but the series is far from
+normal: a normal distribution expects 0.04 weekends beyond $4\sigma$ in a sample this size
+and we observe nine, and June 2022 is an $8.4\sigma$ move that a normal distribution says
+cannot occur. Sigma-scaling would therefore understate the tail by orders of magnitude. We
+read the quantile straight off 597 observed weekends instead, which assumes nothing about
+the shape of the distribution. The base case uses the 99th percentile, 18bp \mbox{---} 6.5 times
+the average absolute move and 4.3 times one standard deviation.
+
+\subsection{What is being priced}
+
+One convention governs every term above, and it is worth stating before the numbers
+rather than after them: \textbf{we price the collateral the system is designed for, not
+the mock standing in for it.}
+
+Our sBILL accrues a fixed 4\% on a clock, so rates cannot move its value. The dominant
+term $D\cdot\Delta y$ therefore prices a risk our own deployment cannot experience, and
+that is deliberate: the fee has to be right for the asset the design calls for, not for
+the stand-in. Dropping it on the grounds that the mock cannot produce it would leave
+$1.48+0.28=1.76$bp against the 10bp charged, and would price a demonstration rather than a
+design.
+
+The same convention has a limit, and we draw it at measurability. A risk enters the fee
+only when it can be estimated from something. The weekend yield shock is read off 597
+observed weekends; the long-weekend term is counted off a calendar, nine closures in
+fifty-two. \textbf{Redemption gates meet neither test.} Issuer discretion over redemption
+is a real feature of tokenized Treasury products, and our own \texttt{SBill} has a
+structural analogue — it pays interest from a reserve funded once at deployment, and
+\texttt{redeem()} transfers without checking the balance, so an exhausted reserve reverts
+the redemption. But the sector is roughly two years old and has never been stressed, so
+any frequency we assigned would be a prior wearing the costume of an estimate. We
+therefore \textbf{name this risk and do not price it}, in \S\ref{sec:unpriced}, alongside
+the larger unpriced exposure in \S\ref{sec:inversion}. Carrying it in the fee would have
+added 0.29bp and changed no conclusion in this document.
+
+Note the first two terms partly cancel: the vault's capital must earn $y+\pi$, but the
+sBILL it holds is itself earning $y$, so only the premium $\pi$ has to come out of the
+discount. This is why the net carry term is small.
+
+\subsection{Weekend yield shocks}
+
+Measured from each Friday's published DTB3 rate to the next published rate, keeping only
+gaps of four days or fewer — 597 weekends.
+
+\begin{center}
+\small
+\begin{tabular}{@{}lrr@{}}
+\toprule
+& \textbf{Yield move} & \textbf{Price impact at $D=0.25$} \\
+\midrule
+Median & 2bp & 0.50bp \\
+95th percentile & 10bp & 2.50bp \\
+99th percentile & 18.04bp & 4.51bp \\
+Largest, 2022-06-10 & 35bp & 8.75bp \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\note{The four largest weekend moves are 2022-06-10 ($+$35bp), 2023-03-17 ($+$29bp),
+2022-07-08 ($+$22bp) and 2022-10-07 ($+$22bp). All four fall in the 2022--23 tightening
+cycle, which is the regime this pricing should be judged against.}
+
+\subsection{The three cases}
+
+With $y=4.01\%$ (DTB3, 2026-10-28) and $h=65$:
+
+\begin{center}
+\small
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+\textbf{Case} & \textbf{Hurdle} & \textbf{Duration} & \textbf{Shock} & \textbf{Terms (bp)} & \textbf{Required} \\
+\midrule
+Low    & 4.01\% & 1 month  & 10bp & $0.00+0.83+0.19$ & 1.02bp \\
+Base   & 6.01\% & 3 months & 18bp & $1.48+4.51+0.28$ & \textbf{6.28bp} \\
+Stress & 9.01\% & 3 months & 35bp & $3.71+8.75+0.43$ & 12.89bp \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The contract charges \textbf{10bp}: $1.59\times$ the base requirement, and comfortably
+clear of the low case. The stress case at 12.89bp sits above it, which is the useful
+result rather than an awkward one — it means the fee has a locatable limit, and
+Section~\ref{sec:breaks} pins that limit to the exact value of each input. A fee that
+covered every conceivable case would simply be overpriced.
+
+Observe which term dominates: T-bill \emph{price risk} is 4.51 of the 6.28bp, 72\% of the
+total. The single largest component of our fee prices the risk that interest rates move
+while the vault is holding the paper.
+
+\section{One trade, five cases}
+
+Take \$100{,}000 of collateral routed through the vault in a single closure. Fee and carry
+are fixed; only the rate shock varies.
+
+\begin{center}
+\small
+\begin{tabular}{@{}lrrrrrr@{}}
+\toprule
+\textbf{Weekend} & \textbf{Shock} & \textbf{Fee} & \textbf{Carry} & \textbf{Price loss} & \textbf{Kept} & \textbf{vs hurdle \$47.44} \\
+\midrule
+Typical (median)      & 2.0bp  & \$100.00 & \$29.75 & $-$\$5.00  & \$124.75 & $+$\$77.31 \\
+Bad, 1-in-20          & 10.0bp & \$100.00 & \$29.75 & $-$\$25.00 & \$104.75 & $+$\$57.31 \\
+Bad, 1-in-100         & 18.04bp & \$100.00 & \$29.75 & $-$\$45.10 & \$84.65  & $+$\$37.21 \\
+\textbf{Break point}  & \textbf{32.9bp} & \$100.00 & \$29.75 & $-$\$82.31 & \$47.44 & \textbf{\$0.00} \\
+Worst ever (Jun 2022) & 35.0bp & \$100.00 & \$29.75 & $-$\$87.50 & \$42.25  & $-$\$5.19 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Each row reads the same way. The vault pays out \$100{,}000 in cash and takes back sBILL
+worth \$100{,}100, so the fee is \$100. It holds that paper for 65 hours at 4.01\%, which
+is \$29.75. Then rates move, the paper loses $D\times\Delta y$ of its value, and whatever
+remains is what the vault keeps. Its depositors required \$47.44 for that weekend.
+
+\subsection{What ``breaks'' means}
+
+The word is doing a lot of work, so it is worth separating two thresholds that are easy to
+collapse into one.
+
+\begin{center}
+\small
+\begin{tabular}{@{}p{4.2cm}p{5.2cm}p{5.6cm}@{}}
+\toprule
+& \textbf{Missing the hurdle} & \textbf{Losing money} \\
+\midrule
+What happens & Vault profits, but by less than depositors required & Vault ends the closure with less than it started \\
+Threshold, 3-month paper & 32.9bp & 51.9bp \\
+Reached in history? & Yes — once, June 2022 at 35bp & No. Largest ever is 35bp \\
+Who notices & Depositors earn below hurdle & ERC-4626 share price falls \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+So the correct statement about June 2022 is narrow: on \$100{,}000 the vault came up
+\textbf{\$5.19 short} of what it had promised, having still made \$42.25. It is a
+knife-edge, not a cliff. Nobody lost principal.
+
+\section{Where each input breaks}
+\label{sec:breaks}
+
+Each row solves one input for the value at which 10bp stops clearing the hurdle, holding
+the others at base.
+
+\begin{center}
+\small
+\begin{tabular}{@{}p{4.0cm}p{2.0cm}p{2.4cm}p{2.0cm}p{3.6cm}@{}}
+\toprule
+\textbf{Input} & \textbf{Base} & \textbf{Breaks above} & \textbf{Headroom} & \textbf{Reached in history?} \\
+\midrule
+Weekend yield shock & 18bp & \textbf{32.9bp} & $1.83\times$ & \textbf{Yes — 35bp, Jun 2022} \\
+Collateral duration & 0.25 yr & \textbf{0.456 yr} & $1.82\times$ & Immediately, on 6-month paper \\
+Closure length & 65 h & 228 h & $2.0\times$ vs 113 h & No. Longest closure is 113 h \\
+Hurdle premium & 2.0\% & 6.7\% & $3.4\times$ & Not observable \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Two inputs matter and two do not. The closure length and the hurdle premium have two to
+three times the headroom they need, so arguing about them changes nothing. The yield shock
+has already been breached once, and the duration assumption has the tightest margin in the
+model — and unlike the other three it is an assumption about our own collateral rather
+than about the world, which makes it the one we can actually do something about.
+
+\subsection{The duration assumption}
+
+This is the one carrying the most weight, because it is an assumption about the collateral
+rather than about the world. Price sensitivity is linear in duration, so doubling the
+maturity doubles the loss from any rate move.
+
+\begin{center}
+\small
+\begin{tabular}{@{}p{4.6cm}rrp{4.4cm}@{}}
+\toprule
+\textbf{Collateral} & \textbf{Loses above} & \textbf{Worst ever} & \textbf{Verdict} \\
+\midrule
+3-month bill (our assumption) & 51.9bp & 35bp & $1.48\times$ headroom \\
+6-month bill & 26.0bp & 35bp & \textbf{Has happened} \\
+1-year note & 13.0bp & 35bp & \textbf{Happens regularly}; 99th pct is already 18bp \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The design implication is concrete and belongs in the contract rather than the
+spreadsheet: \textbf{the vault should accept only short-dated collateral, and that limit
+should be enforced, not assumed.} At 3 months the pricing survives the worst weekend on
+record. At 6 months it does not survive an ordinary bad one.
+
+\section{Case study: June 2022, the worst weekend}
+
+This is the single most informative closure in the data, because both legs of the risk
+fired at once.
+
+On Friday 10 June 2022 the May CPI print landed at 8.6\%, the highest since 1981. Rates
+repriced through the close:
+
+\begin{center}
+\small
+\begin{tabular}{@{}lr@{}}
+\toprule
+Thursday 9 June & 1.26\% \\
+Friday 10 June & 1.34\% \\
+Monday 13 June & \textbf{1.69\%} \\
+\midrule
+Move across the closure & \textbf{$+$35bp} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Meanwhile BTC fell from \$29{,}169 at Friday 4pm ET to a low of \$23{,}319 and closed
+Monday at \$23{,}610 — a 19.06\% adverse excursion on settled hourly prices, with no
+recovery inside the closure.
+
+That combination is what makes it the worst case rather than merely a bad one: \textbf{the
+vault buys the most collateral at exactly the moment that collateral is worth the least.}
+The two risks are positively correlated, which is the opposite of what a liquidity
+provider wants.
+
+On \$1m of notional, a long would have sold roughly \$190{,}567 to the vault:
+
+\begin{center}
+\small
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+\textbf{Collateral} & \textbf{Fee} & \textbf{Carry} & \textbf{Price loss} & \textbf{Net} & \textbf{Dollars} \\
+\midrule
+3-month bill & $+$10.00bp & $+$0.99bp & $-$8.75bp & $+$2.24bp & $+$\$42.77 \\
+6-month bill & $+$10.00bp & $+$0.99bp & $-$17.50bp & $-$6.51bp & $-$\$123.98 \\
+1-year note  & $+$10.00bp & $+$0.99bp & $-$35.00bp & $-$24.01bp & $-$\$457.47 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Note the carry: only 0.99bp, against 2.98bp at today's yields. Rates were 1.34\% in 2022,
+so the cushion that normally absorbs a shock was mostly absent. \textbf{The pricing is
+weakest when rates are low and moving} — which is also when a 35bp weekend becomes
+possible. A third correlation working against us.
+
+\section{Regime stress}
+\label{sec:regimes}
+
+For each crisis we take the worst closure inside the surrounding window, measured as the
+adverse excursion from Friday 4pm ET over 65 hours on settled hourly closes. Excursion is
+the right measure rather than the Friday-to-Monday net move, because settlement is hourly:
+the losing side pays as the price goes against it, and a later recovery does not return the
+collateral already sold.
+
+\begin{center}
+\small
+\begin{tabular}{@{}p{4.1cm}p{2.0cm}rrrrr@{}}
+\toprule
+\textbf{Regime} & \textbf{Weekend} & \textbf{BTC open} & \textbf{Excursion} & \textbf{Sold/\$1m} & \textbf{Fee} & \textbf{$\times$typ} \\
+\midrule
+Yen carry unwind      & 2024-08-02 & \$62{,}553  & 20.38\% & \$203{,}816 & \$204 & $5.1\times$ \\
+Jun 2022 CPI shock    & 2022-06-10 & \$29{,}169  & 19.06\% & \$190{,}567 & \$191 & $4.8\times$ \\
+SVB / USDC depeg      & 2023-03-10 & \$19{,}972  & 13.54\% & \$135{,}378 & \$135 & $3.4\times$ \\
+May 2021 mining ban   & 2021-05-14 & \$49{,}193  & 12.80\% & \$127{,}973 & \$128 & $3.2\times$ \\
+LUNA/UST collapse     & 2022-05-06 & \$36{,}081  & 9.10\%  & \$91{,}048  & \$91  & $2.3\times$ \\
+Oct 2025 deleveraging & 2025-10-24 & \$110{,}920 & 4.63\%  & \$46{,}333  & \$46  & $1.2\times$ \\
+FTX collapse          & 2022-11-11 & \$16{,}573  & 4.45\%  & \$44{,}540  & \$45  & $1.1\times$ \\
+\midrule
+Typical weekend       & —          & —           & 3.98\%  & \$39{,}795  & \$40  & $1.0\times$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Reading the revenue column honestly}
+
+Crises are good for the vault's revenue line and bad for its risk. Volume scales with the
+move, so the yen unwind would have earned $5.1\times$ a typical weekend. But the fee is
+10bp of a larger number — \$204 instead of \$40 per \$1m of notional — and nothing about
+that \$204 compensates for the two problems the same weekend creates.
+
+\textbf{First, capacity.} Sizing the vault at the 95th percentile of weekend excursions
+gives \$93{,}522 of capacity per \$1m of notional. Four of the seven crises exceed it:
+
+\begin{center}
+\small
+\begin{tabular}{@{}lrr@{}}
+\toprule
+\textbf{Regime} & \textbf{Needs} & \textbf{\% of capacity} \\
+\midrule
+Yen carry unwind    & \$203{,}816 & 218\% \\
+Jun 2022 CPI shock  & \$190{,}567 & 204\% \\
+SVB / USDC depeg    & \$135{,}378 & 145\% \\
+May 2021 mining ban & \$127{,}973 & 137\% \\
+LUNA/UST collapse   & \$91{,}048  & 97\% \\
+Oct 2025            & \$46{,}333  & 50\% \\
+FTX collapse        & \$44{,}540  & 48\% \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+A 95th-percentile vault is undersized for exactly the weekends it exists to handle. When
+it empties, settlement stops and waits for Monday.
+
+\textbf{Second, liquidation.} Whether the position survives depends entirely on opening
+leverage, and the 3\% haircut barely moves the threshold.
+
+\begin{center}
+\small
+\begin{tabular}{@{}lrrl@{}}
+\toprule
+\textbf{Leverage} & \textbf{Long liquidated below} & \textbf{Short liquidated above} & \textbf{Crises surviving} \\
+\midrule
+$2.6\times$ (demo) & $-$31.4\% & $+$25.5\% & all seven \\
+$4.0\times$        & $-$16.4\% & $+$13.3\% & four of seven \\
+$4.85\times$ (max) & $-$11.5\% & $+$9.3\%  & three of seven \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+At the demo's $2.6\times$ nothing is liquidated in any regime. At $4\times$ the June 2022
+and yen-unwind longs go, and the SVB short goes. At the maximum the 2021 mining ban takes
+the long too. The demo is safe because it is conservatively levered, not because the
+parameters are strong — a distinction worth stating plainly rather than letting the
+Sepolia run imply otherwise.
+
+\section{The haircut}
+
+A haircut counts collateral at less than face value, because it is not cash and would have
+to be sold. Ours is 1\% when the market is open and 3\% when it is closed. The logic is
+right: on a weekday you redeem with the issuer at full NAV, while at a closure your only
+buyer is the vault, at a discount — or there is no buyer at all.
+
+\subsection{What it costs}
+
+\begin{center}
+\small
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+\textbf{\$30{,}000 posted as} & \textbf{Counts as} & \textbf{Max leverage} & \textbf{Short liquidated at} \\
+\midrule
+Cash (tUSDC)        & \$30{,}000 & $5.00\times$ & \$98{,}049 ($+$25.94\%) \\
+sBILL, 1\% haircut  & \$29{,}700 & $4.95\times$ & \$97{,}959 ($+$25.82\%) \\
+sBILL, 3\% haircut  & \$29{,}100 & $4.85\times$ & \$97{,}774 ($+$25.59\%) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Moving from the weekday to the weekend haircut brings the liquidation threshold
+\textbf{\$185 closer} on a figure near \$98{,}000 — 0.19\% of it — and costs a tenth of a
+turn of leverage. The weekend haircut is close to free.
+
+\subsection{What it is sized against}
+
+\begin{center}
+\small
+\begin{tabular}{@{}lr@{}}
+\toprule
+Measured T-bill price risk, 99th pct & 4.51bp \\
+Worst-ever price risk, 35bp shock & 8.75bp \\
+Vault discount paid on conversion & 10.00bp \\
+\midrule
+Total cost of converting, worst case & 18.75bp \\
+\textbf{The haircut} & \textbf{300bp} \\
+\midrule
+Multiple of measured price risk & $67\times$ \\
+Multiple of worst-case conversion cost & $16\times$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+So 3\% is one to two orders of magnitude larger than the valuation risk it is usually
+described as covering — and measuring that gap is what tells us the haircut is doing a
+different job from the one its name suggests.
+
+\textbf{Keep it, and describe it correctly.} It costs \$185 and a tenth of a turn of
+leverage, and it is the one place in the contract that becomes more conservative the
+moment the market shuts, which is exactly the right instinct. What it buys is not a
+calibrated price for 4.5bp of measurable T-bill price risk; it is deliberately generous
+cover for the closure risks we cannot put a number on — a longer closure, a delayed
+redemption, an issuer problem. At \$185 that cover is close to free, which is the strongest
+possible argument for keeping it.
+
+\subsection{What it cannot cover}
+
+The haircut answers ``will this sell below face value?'' — and over a weekend the answer
+is yes, by about 10bp. Trivial. The question that matters is ``will it sell at all?''
+
+\begin{center}
+\small
+\begin{tabular}{@{}lrr@{}}
+\toprule
+\textbf{BTC move over a 65-hour closure} & \textbf{Size} & \textbf{vs 3\% haircut} \\
+\midrule
+99th percentile, short side & 13.50\% & $4.5\times$ uncovered \\
+99th percentile, long side  & 13.93\% & $4.6\times$ uncovered \\
+Worst observed              & 20.38\% & $6.8\times$ uncovered \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+This is not really the haircut's failure. The contract has two distinct buffers, and they
+answer different questions:
+
+\begin{itemize}
+\item \textbf{The haircut (3\%)} — this asset may not convert at face value. A
+      \emph{valuation} adjustment.
+\item \textbf{Maintenance margin (10\%)} — the price may move before the position can be
+      closed. A \emph{solvency} buffer.
+\end{itemize}
+
+A vault with no cash left is a \emph{liquidity} failure, and neither buffer prices it.
+Marking the collateral down does not produce a buyer. That risk is carried by vault
+sizing, and Section~\ref{sec:regimes} shows the sizing is the weak link.
+
+\section{What this pricing does not cover}
+\label{sec:limits}
+
+The analysis establishes three boundaries on its own results. Each one is a finding in
+its own right, and each points at a specific change rather than a caveat.
+
+\subsection{The model is deliberately more conservative than the implementation}
+
+\texttt{SBill.nav()} grows purely on the clock:
+
+\begin{center}
+\texttt{1e18 + (1e18 * apyBps * (block.timestamp - startTime)) / (10\_000 * 365 days)}
+\end{center}
+
+A fixed 4\%, which never reprices when rates move. The 35bp spike of June 2022 would be
+invisible to our deployment: the vault would bank its full 10bp and notice nothing.
+
+We priced the risk the collateral would carry in production, not the lighter risk the
+mock carries — which is the right way round, and worth being explicit about. T-bill price
+risk is 4.51 of the 6.28bp required discount, 72\% of the total, and it is a risk our
+deployment \emph{structurally cannot experience}. So the largest component of the fee is
+one that no unit test and no Sepolia transaction can exercise. The pricing is built for a
+real tokenized T-bill and will hold when one is swapped in; the demo is simply a weaker
+test than the model it implements.
+
+\subsection{A loss would be invisible on-chain}
+
+\begin{sloppypar}
+If the vault did take a price loss, it surfaces at redemption. The stored
+\texttt{inventoryCost} is zeroed, \texttt{totalAssets()} falls, and the ERC-4626
+share price drops. Depositors absorb it. Nothing reverts and nothing pauses.
+\end{sloppypar}
+
+And the event cannot distinguish a loss from breaking even
+(\texttt{WeekendVault.sol:130}):
+
+\begin{center}
+\small\texttt{emit InventoryRedeemed(shares, usdcReceived, usdcReceived > cost ? usdcReceived - cost : 0);}
+\end{center}
+
+On a loss the profit field emits zero. A depositor reading the log cannot tell ``broke
+even'' from ``lost \$457.'' Emitting a signed \texttt{int256}, or emitting \texttt{cost}
+alongside \texttt{usdcReceived}, makes losses visible. A one-line fix, and finding a
+silent-loss path in one's own code is exactly what a security review is for.
+
+\subsection{Redemption gates: named, not priced}
+\label{sec:unpriced}
+
+A tokenized fund can suspend redemptions. If that happened on a Monday the vault would
+hold sBILL it could not convert, for an unknown period — and our own \texttt{SBill} has
+the same shape of failure, since \texttt{redeem()} transfers from a reserve funded once at
+deployment and reverts when that reserve is empty.
+
+We do not price it, and the reason is the measurability test in \S2.2. Every other input
+in the fee is anchored to something countable: 597 observed weekends for the yield shock,
+fifty-two calendar closures for the long-weekend term. Tokenized Treasury funds are
+roughly two years old and have not been through a stress event, so there is no base rate
+to estimate from. Any frequency we assigned would be a prior presented as a measurement,
+and that is a worse failure than leaving the term out.
+
+Leaving it out is cheap. On the priors we had originally used — a gate once in twenty
+years costing 3\% — the term contributes 0.29bp, about 4\% of the fee, and removing it
+changes no conclusion in this document: coverage improves from $1.52\times$ to
+$1.59\times$ and every break point moves further away. A term that small, resting on a
+number that soft, does not belong in a price.
+
+What replaces it is a threshold. The fee stops clearing its hurdle if gates reach roughly
+one weekend in eighty, or about once every eighteen months. That is the claim we are
+willing to defend — not that gates are rare at some particular rate, but that they are
+rarer than once every eighteen months, which the existence of a \$15bn sector makes
+difficult to dispute. The exposure is managed by diversifying issuers and by sizing the
+vault, not by charging for it.
+
+\subsection{The inversion}
+\label{sec:inversion}
+
+The largest unpriced exposure is the one the vault holds all the time.
+
+\begin{center}
+\small
+\begin{tabular}{@{}lr@{}}
+\toprule
+Priced: T-bill price risk & 4.51bp \\
+Priced: net carry & 1.48bp \\
+Priced: long-weekend risk & 0.28bp \\
+\midrule
+\textbf{Total risk budget} & \textbf{6.28bp} \\
+\midrule
+\textbf{Not priced:} redemption gate (\S\ref{sec:unpriced}) & no base rate \\
+\textbf{Not priced:} USDC depeg, March 2023 & \textbf{1{,}300bp} \\
+\quad as a multiple of the entire budget & $207\times$ \\
+\quad as years of fee revenue, \$1m book & 89.5 years \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The model prices four and a half basis points of risk on paper the vault holds for 65
+hours, and zero on the stablecoin it holds permanently. In March 2023 USDC traded at
+\$0.87. That is 1{,}300bp — more than two hundred times the whole risk budget.
+
+It is also wrong-way. The vault holds the most cash during a crisis, because that is when
+settlement draws on it hardest — and a crisis is when stablecoins depeg. The SVB weekend
+appears twice in this document for that reason: as the third-largest draw in
+Section~\ref{sec:regimes}, and as the largest unpriced loss here. The same weekend
+maximises both. Circle's own stated trigger was that its wires had not settled before the
+weekend, which is the identical mechanism our system is built to address.
+
+\subsection{What we would change}
+
+\begin{enumerate}
+\item \textbf{Cap collateral duration in the contract.} The tightest assumption in the
+      model, and currently unenforced.
+\item \textbf{Cap or reserve against the stablecoin leg.} We do not claim this exposure
+      can be priced into the discount — a 1{,}300bp tail against a 6.28bp budget is not a
+      charge any fee absorbs. It is a position limit: cap the vault's idle balance, hold
+      part of it in a second stablecoin, or accept the exposure explicitly rather than
+      silently.
+\item \textbf{Size the vault above the 95th percentile.} Four of seven historical crises
+      exhaust it.
+\item \textbf{Emit signed profit and loss} from \texttt{redeemInventory()}.
+\item \textbf{Promote the five hidden judgement parameters} into the settings cell, so a
+      reader can disagree with them.
+\end{enumerate}
+
+\section{Figure provenance}
+\label{sec:provenance}
+
+Every number quoted in our write-up, with its source and the arithmetic that produces it.
+
+\begin{center}
+\footnotesize
+\begin{longtable}{@{}p{4.4cm}p{1.8cm}p{3.1cm}p{5.4cm}@{}}
+\toprule
+\textbf{Figure} & \textbf{Value} & \textbf{Source} & \textbf{How computed} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Figure} & \textbf{Value} & \textbf{Source} & \textbf{How computed} \\
+\midrule
+\endhead
+Current 3m yield & 4.01\% & FRED DTB3, 2026-10-28 & Last non-null observation \\
+Weekend shock, median & 2bp & FRED DTB3 & Median $|r_{t+1}-r_t|$ over 597 Fri-to-next pairs \\
+Weekend shock, 99th & 18bp & FRED DTB3 & 99th pct of the same \\
+Weekend shock, max & 35bp & FRED DTB3, 2022-06-10 & Max of the same \\
+Hurdle per closure & 4.74bp & Derived & $(y+\pi)\tfrac{65}{8760}+p_\ell(y+\pi)\tfrac{24}{8760}$ \\
+Required discount, base & 6.28bp & Derived & $1.48+4.51+0.28$ \\
+Charged discount & 10bp & \texttt{WeekendVault} & \texttt{discountBps}, read on Sepolia \\
+Coverage ratio & $1.59\times$ & Derived & $10/6.28$ \\
+Carry on \$100k, 65h & \$29.75 & Derived & $100{,}000\times0.0401\times65/8760$ \\
+Break point, yield shock & 32.9bp & Derived & Solve $10\bp+\text{carry}-0.25\Delta y=4.74\bp$ \\
+Break point, duration & 0.456 yr & Derived & Solve the same for $D$ at $\Delta y=18$bp \\
+Principal loss, 3-month & 51.9bp & Derived & Solve net kept ${}=0$ at $D=0.25$ \\
+Principal loss, 6-month & 26.0bp & Derived & Same at $D=0.5$ \\
+Jun 2022 BTC excursion & 19.06\% & Coinbase hourly & $1-\min(\text{close})/\text{close}_{\text{Fri 20:00}}$, 65h \\
+Jun 2022 net, 3-month & $+$2.24bp & Derived & $10+0.99-8.75$, carry at $y=1.34\%$ \\
+Typical weekend & 3.98\% & Coinbase hourly & Mean worst-side excursion, 304 weekends \\
+Worst weekend & 20.38\% & Coinbase, 2024-08-02 & Max of the same \\
+99th pct, long side & 13.93\% & Coinbase hourly & 99th pct of down-excursion \\
+Vault capacity, 95th pct & \$93{,}522 & Coinbase hourly & 95th pct excursion $\times$ \$1m \\
+Haircut, counts as & \$29{,}100 & Derived & $30{,}000\times(1-0.03)$ \\
+Liquidation, weekend & \$97{,}774 & Derived & $h(D+P_0)/(m+h)$, $h=0.97$, $m=0.10$ \\
+Haircut cost & \$185 & Derived & $97{,}959-97{,}774$ \\
+Haircut vs price risk & $67\times$ & Derived & $300/4.51$ \\
+USDC depeg & 1{,}300bp & Mar 2023, \$0.87 low & $(1-0.87)\times10{,}000$ \\
+Depeg vs budget & $207\times$ & Derived & $1300/6.28$ \\
+\bottomrule
+\end{longtable}
+\end{center}
+
+\appendix
+\section{Reproducing these figures}
+\label{sec:repro}
+
+All four data series are cached in \texttt{docs/data/}, so no network access is needed.
+
+\begin{enumerate}
+\item \texttt{docs/analysis.ipynb} Sections A--E produce the pricing decomposition,
+      sensitivity grids and closure statistics. Section~F reads the deployed Sepolia
+      contracts and reconciles the settings in \S1.2 against them; it is the only section
+      that touches the network.
+\item The settings in \S1.2 are mirrored from the deploy script
+      \texttt{00\_deploy\_weekend\_margin.ts} in
+      \texttt{packages/hardhat/deploy/}. They are not re-typed here: Section~F
+      asserts equality and fails loudly otherwise.
+\item Figures in this document were recomputed independently of the notebook, from the
+      same cached CSVs, as a cross-check. Two discrepancies surfaced and were resolved in
+      favour of the stricter definition: closure moves are measured as \emph{adverse
+      excursion} rather than Friday-to-Monday net move, because hourly settlement draws on
+      the vault at the worst point of the closure and a later recovery does not return
+      collateral already sold; and regime weekends are selected as the worst closure within
+      a dated crisis window rather than hand-picked, so the choice is reproducible.
+\end{enumerate}
+
+\section{Scope of the analysis}
+
+\begin{itemize}
+\item \textbf{sBILL is a mock.} It accrues a fixed 4\% from a pre-funded reserve. It
+      demonstrates the integration; it does not carry real T-bill exposure, and as
+      \S\ref{sec:limits} sets out it cannot express the price risk that dominates the fee.
+\item \textbf{Day-count mismatch.} DTB3 is quoted on a discount basis, actual/360. sBILL
+      accrues simple interest on 365 days. The difference is immaterial at 65-hour
+      horizons but is a real inconsistency.
+\item \textbf{BTC history starts in 2021.} 304 weekends. The yield series reaches back to
+      2015 and 597 weekends, so the two samples are not co-extensive; the regime table is
+      bounded by the shorter one.
+\item \textbf{Hourly closes, not trades.} Excursions are measured on settled hourly closes,
+      matching how the contract settles. Intra-hour highs and lows are worse — the 99th
+      percentile long excursion rises from 13.93\% to 17.42\% — so a liquidation engine
+      reading a live price would fire more often than this analysis implies.
+\item \textbf{No holiday calendar.} \texttt{MarketCalendar} tests time-of-week only. On a
+      trading holiday the contract believes the market is open, routes to a closed issuer,
+      locks the vault out, and applies the gentle 1\% haircut. With real collateral
+      \texttt{redeem()} would revert and take \texttt{settle()} with it. The 113-hour
+      Thanksgiving closure is priced in \S\ref{sec:breaks} but not implemented.
+\item \textbf{The hurdle premium is assumed.} 2\% above T-bills is a judgement with no
+      observable market price. It has $3.4\times$ headroom, so it is not load-bearing.
+\item \textbf{Redemption gates are not priced.} The sector has no base rate, so the fee
+      excludes them and \S\ref{sec:unpriced} states the threshold at which they would
+      matter instead. A reader who believes gates are more frequent than one weekend in
+      eighty should treat the fee as uncovered for that risk.
+\end{itemize}
+
+\end{document}
