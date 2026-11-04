@@ -79,12 +79,12 @@ Three quantitative conclusions follow, each developed below:
 \begin{enumerate}
   \item \textbf{Break-even is \$134m of hedged notional}, supported by a \$26m vault — that vault
   being about 0.2\% of the \$15bn tokenized treasury market.
-  \item \textbf{The deployed 10bp fee is not commercially viable.} The vault earns 1.21\% a year
+  \item \textbf{The deployed 10bp fee is not commercially viable.} The vault earns 1.2--1.7\% a year
   against 4.01\% on T-bills. A real product needs 28--44bp, and the band where both sides agree is
   narrow: 28--42bp.
   \item \textbf{The design is economically impossible on Ethereum mainnet.} At 100 open trades the
   keeper's gas alone costs \$1.90m a year, about sixty times the revenue those trades earn. On an L2 the same
-  workload costs \$2,078. This single constraint determines where the product can exist.
+  workload costs \$1,897. This single constraint determines where the product can exist.
 \end{enumerate}
 
 \section{Market context}
@@ -251,9 +251,9 @@ carries four specific protections, each of which can be inspected in the reposit
   good as the oracle, which is why the two-hour staleness check and the banner above exist.
 \end{itemize}
 
-\textbf{What we have not done.} Every flow was exercised on a local chain with a test wallet, and on
-Sepolia the pages read the live contracts correctly, but no transaction has yet been sent from the
-deployed site through MetaMask. We state this rather than imply coverage we do not have.
+\textbf{Live use of the site.} Every flow was exercised on a local chain with a test wallet, and on
+4 November the whole weekend story and a liquidation were sent from the deployed site through
+MetaMask on Sepolia.
 
 \subsection{Failure modes}
 
@@ -325,7 +325,7 @@ airdrop.
 The vault buys collateral at NAV minus a discount while the issuer is unreachable and redeems at full
 NAV when it reopens. It earns the discount plus the interest the asset accrues while held — tokenized
 treasuries accrue continuously, including weekends, even though they cannot be redeemed. Per \$1 of
-vault capital, with the pool sized to cover 99\% of weekends — which leaves it 24.7\% utilised on
+vault capital, with the pool sized to cover 99\% of weekends — which leaves it 24.6\% utilised on
 average — and a 4.01\% T-bill yield:
 
 \begin{center}
@@ -334,15 +334,15 @@ average — and a 4.01\% T-bill yield:
 \toprule
 \textbf{Discount} & \textbf{Income} & \textbf{Carry} & \textbf{Total} & \\
 \midrule
-10bp (as deployed) & 1.29\% & 0.36\% & \textbf{1.65\%} & loses to T-bills \\
-28bp & 3.60\% & 0.36\% & \textbf{3.96\%} & matches T-bills \\
-42bp (our price) & 5.40\% & 0.36\% & \textbf{5.76\%} & before our share \\
-44bp & 5.66\% & 0.36\% & \textbf{6.02\%} & T-bills $+$ 2\% \\
+10bp (as deployed) & 1.28\% & 0.38\% & \textbf{1.66\%} & loses to T-bills \\
+28bp & 3.58\% & 0.38\% & \textbf{3.96\%} & matches T-bills \\
+42bp (our price) & 5.38\% & 0.38\% & \textbf{5.76\%} & before our share \\
+44bp & 5.63\% & 0.38\% & \textbf{6.01\%} & T-bills $+$ 2\% \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-\textbf{At the deployed 10bp the vault loses to its own alternative}, earning 1.65\% against 4.01\% on
+\textbf{At the deployed 10bp the vault loses to its own alternative}, earning 1.66\% against 4.01\% on
 T-bills. The cause is not the weekend — it is that three quarters of the vault's capital is idle on a
 normal weekend. Our financial analysis establishes the per-use cost at only 6.6bp, which 10bp covers
 comfortably. The shortfall is entirely the cost of waiting, and it is why the contract was deployed

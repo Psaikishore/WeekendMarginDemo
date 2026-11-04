@@ -49,6 +49,10 @@
 \newcommand{\etx}[1]{{\footnotesize\href{https://sepolia.etherscan.io/tx/#1}{\nolinkurl{#1}}}}
 \newcommand{\ead}[1]{{\footnotesize\href{https://sepolia.etherscan.io/address/#1}{\nolinkurl{#1}}}}
 \newcommand{\eshort}[2]{\href{https://sepolia.etherscan.io/tx/#1}{#2}}
+% Block, time, BTC price and Fund A's live state at the reconciliation read, written by recon_table.py.
+\input{report_live}
+% The stress-weekend table of Section 4, written by stress_weekends.py.
+\input{report_stress}
 
 
 \begin{document}
@@ -88,21 +92,20 @@ Swastik Mishra \; (\texttt{sgm9198}) & financial analysis, product, going to mar
 \section*{Where to find everything}
 \addcontentsline{toc}{section}{Where to find everything}
 
-This report is the centre of the submission. The table below maps every required item to where it
-lives, so nothing has to be hunted for.
+The brief lists six deliverables. The table below says where each one is.
 
 \begin{center}
 \small
 \begin{tabular}{@{}p{0.6cm}p{4.6cm}p{10.6cm}@{}}
 \toprule
-\textbf{\#} & \textbf{Required item} & \textbf{Where it is} \\
+\textbf{\#} & \textbf{Deliverable} & \textbf{Where it is} \\
 \midrule
-1 & Objective and description, why we chose it, what we expected & \textbf{Section~\ref{sec:objective}} of this report \\
-2 & Contract execution evidence, Etherscan links, verified source & \textbf{Etherscan screenshots in Section~\ref{sec:evidence}}; addresses in Section~\ref{sec:addresses}, transactions in \textbf{Appendix~\ref{app:addresses}}; the running application in Section~\ref{sec:frontend} \\
-3 & All source code (Solidity), tokens and contracts, functions & \nolinkurl{packages/hardhat/contracts/} in the repository, verified on Etherscan (\S\ref{sec:metadata}); every function is tabulated in \textbf{Section~\ref{sec:arch}} \\
-4 & Documentation of code, metadata, JSON, references & \textbf{Section~\ref{sec:metadata}}, \textbf{Appendix~\ref{app:json}}, \textbf{Appendix~\ref{app:refs}} \\
-5 & Financial analysis with plots, and the business use case & \textbf{Section~\ref{sec:finance}} (plots) and \textbf{Section~\ref{sec:gtm}}; the workbook is \texttt{docs/analysis.ipynb} \\
-6 & Summary of steps, unrealized P\&L under stated assumptions, what we learned & \textbf{Section~\ref{sec:summary}} \\
+1 & Contracts on Sepolia, including our token, verified on Etherscan & All 16 addresses in \textbf{Section~\ref{sec:addresses}}; verification and metadata in \S\ref{sec:metadata}; Etherscan screenshots in \S\ref{sec:evidence}; every function tabulated in \S\ref{sec:arch} \\
+2 & GitHub repository, tagged \texttt{final}, with a README & \url{https://github.com/Psaikishore/WeekendMarginDemo}; the README explains what the project does and how to run the tests \\
+3 & \texttt{submission.json} & Repository root; its structure is in \textbf{Appendix~\ref{app:json}}; the eight key transactions are in \textbf{Appendix~\ref{app:addresses}} \\
+4 & Report (PDF) under the eight required headings & This document, \texttt{docs/report.pdf} \\
+5 & Financial analysis in \texttt{docs/} & \texttt{docs/analysis.ipynb}, summarised with its charts in \textbf{Section~\ref{sec:finance}}; the business case is \textbf{Section~\ref{sec:gtm}} \\
+6 & Video: narrated, every member speaks, at least one live Sepolia transaction & Linked in \texttt{submission.json}; the running application is described in \S\ref{sec:frontend} \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -114,7 +117,7 @@ lives, so nothing has to be hunted for.
 \textbf{Graded area} & \textbf{Our answer, in one line} \\
 \midrule
 I. Rigor of methodology & Every input declared in one config file; 28 model values reconciled to the wei against the live contracts (\S\ref{sec:reconcile}); break points located for each assumption (\S\ref{sec:breaks}). \\
-II. Design decisions & 14 decisions with the alternative we rejected, and 5 things we changed mid-build because measurement told us to (\S\ref{sec:design}). \\
+II. Design decisions & 18 decisions, each with the alternative we considered and the reason; 5 of them changed during the build because of a measurement (\S\ref{sec:design}). \\
 III. Scope delivered & 6 contracts in 3 labelled deployment sets, 37 tests, keeper, 7-page front end, one-command on-chain run, notebook, 3 documents. All live (\S\ref{sec:arch}, \S\ref{sec:liverun}). \\
 IV. Presentation and going to market & This report with contents and screenshots; a go-to-market plan with a break-even number and a named reason the product cannot ship on mainnet (\S\ref{sec:gtm}). \\
 V. Quality of code & OpenZeppelin throughout, packed storage, custom errors, \texttt{nonReentrant} on every entry point, Slither scanned and every finding answered (\S\ref{sec:testing}). \\
@@ -125,7 +128,7 @@ VI. Advanced functionality & Nine features, each with a transaction hash or a fi
 
 \vspace{6pt}
 \cbox{\textbf{The one-sentence version.} A fund can keep its money in Treasury bills, earning
-interest, and still pay what it owes at three in the morning on a Sunday — because when the T-bill
+interest, and still pay what it owes on a Sunday — because when the T-bill
 market is shut, a permissionless vault of investors' cash buys the fund's T-bill tokens at a small
 discount, pays the winner immediately, and redeems the tokens on Monday for the difference.}
 
@@ -148,17 +151,17 @@ rises on a Saturday, the short owes cash on Saturday. Its safest asset, a Treasu
 4\% a year, cannot be sold until Monday.
 
 So the fund does the only thing it can. It keeps a pile of cash sitting idle, all year, for the
-handful of weekend hours it might be needed. That cash earns nothing. It is the financial equivalent
-of keeping your savings under the mattress because the bank closes at weekends.
+handful of weekend hours it might be needed. That cash earns nothing.
 
-\cbox{\textbf{This is not a hypothetical.} Around \$19bn of open crypto positions were wiped out
-inside 36 hours over 10--11 October 2025 (figure reported by RockawayX). CME now trades crypto
-around the clock, but weekend trades still do not clear until the next business day. The timing
-mismatch is live, it is large, and nobody has removed it.}
+\cbox{\textbf{The problem is current.} About \$19bn of open crypto positions were liquidated within
+roughly 36 hours on 10--11 October 2025~\cite{rockawayx}. CME Group has traded crypto futures and
+options around the clock since May 2026, but weekend trades still carry the next business day's trade
+date and are cleared and settled on that day~\cite{cmeclear,cmelaunch}. The timing mismatch exists
+today, and it is large.}
 
 \subsection{What we built}
 
-\textbf{A shop that stays open all weekend.}
+\textbf{A buyer of T-bill tokens that is open all weekend.}
 
 If a fund needs cash on Saturday, our vault buys its tokenized T-bills for \$0.999 on the dollar. On
 Monday the vault redeems them for \$1.0000 and keeps the difference. Three things happen that
@@ -166,7 +169,7 @@ cannot happen today:
 
 \begin{itemize}
   \item \textbf{The fund} pays a few basis points, only when it actually needs cash, and earns T-bill
-  interest for the rest of the year instead of holding dead cash.
+  interest for the rest of the year instead of holding idle cash.
   \item \textbf{The winner} is paid on Saturday, not Monday. No IOU, no counterparty exposure
   overnight.
   \item \textbf{The vault's investors} earn the discount.
@@ -174,7 +177,7 @@ cannot happen today:
 
 No bank has to be open. No person has to approve anything. No custodian sits in the middle. The
 clearinghouse reads its collateral's redemption calendar directly and routes settlement
-accordingly, which is what makes an automatic payment at 3am on a Sunday possible at all.
+accordingly, which is what makes an automatic payment on a Sunday possible.
 
 \begin{center}\small
 \begin{verbatim}
@@ -199,8 +202,8 @@ We chose Topic~2, hedging with perpetual swaps, for three reasons.
   \item \textbf{The course requires every project to mint and use its own token.} That requirement
   pushed us somewhere interesting. A perp alone does not need a token. A perp \emph{margined with a
   tokenized Treasury bill} needs one — and the moment the collateral has its own redemption
-  calendar, the weekend problem appears and the whole design follows from it. The token is the
-  reason the project exists, not an ornament bolted on to satisfy a rule.
+  calendar, the weekend problem appears and the whole design follows from it. The token is central
+  to the design rather than an addition made to satisfy a rule.
   \item \textbf{The market was moving in this direction while we built.} Circle shipped a 24/7
   BUIDL-to-USDC contract in April 2024~\cite{circle}. Binance accepted Circle's USYC as off-exchange
   collateral in July 2025 and BlackRock's BUIDL that November~\cite{binance,protofire}. Deribit and
@@ -210,8 +213,8 @@ We chose Topic~2, hedging with perpetual swaps, for three reasons.
 
 \subsection{What we expected, and what actually happened}
 
-We wrote our expectations down at the proposal stage. Three of them were wrong, and the wrong ones
-turned out to be the most valuable part of the project.
+We wrote our expectations down at the proposal stage. Three of them turned out to be wrong, and those
+three taught us the most.
 
 \begin{center}
 \small
@@ -219,7 +222,7 @@ turned out to be the most valuable part of the project.
 \toprule
 \textbf{What we expected} & \textbf{What we found} & \textbf{Why it matters} \\
 \midrule
-A 10bp weekend discount would be about right. & 10bp covers the risk of \emph{each use} (6.6bp needed) but the vault still earns only 1.2--1.7\% a year against 4.01\% on T-bills. A real vault needs 28--44bp. & The cost is not the weekend. It is the three quarters of the vault's cash that sits idle waiting for one. We report this openly rather than quietly re-deploying (\S\ref{sec:vaulteconomics}). \\
+A 10bp weekend discount would be about right. & 10bp covers the risk of \emph{each use} (6.6bp needed) but the vault still earns only 1.2--1.7\% a year against 4.01\% on T-bills. A real vault needs 28--44bp. & The cost is not the weekend. It is the three quarters of the vault's cash that sits idle waiting for one. We report this rather than redeploying with a different number (\S\ref{sec:vaulteconomics}). \\
 Weekends are more dangerous than weekdays. & Per hour, weekends are \emph{calmer}: hourly volatility 0.52\% inside closures against 0.68\% outside. & The weekend problem is that the T-bill market is shut, not that Bitcoin misbehaves. That reframed the whole design (\S\ref{sec:weekendrisk}). \\
 The main risk to a hedger is price. & The main risk is \emph{liquidation}. With no top-ups the demo's short is liquidated in 14\% of 30-day windows, and about half at maximum leverage. & A liquidated hedge leaves the fund naked at the worst possible moment (\S\ref{sec:liq}). \\
 Gas would be a detail. & At 100 open trades, hourly settlement on Ethereum mainnet costs \$1.90m a year against roughly \$30k of revenue. & The product cannot exist on mainnet. This single measurement decides where it can ship (\S\ref{sec:gasconstraint}). \\
@@ -248,9 +251,8 @@ Risks: BUIDL and BENJI holder restrictions & \S\ref{sec:risks}, risk 2 \\
 %====================== 2. DESIGN DECISIONS ======================
 \section{Design decisions}\label{sec:design}
 
-This is the section we most wanted to write, because almost every interesting choice in this project
-was made twice: once by instinct, and once again after something measured told us the instinct was
-wrong. Those are marked \textbf{changed}.
+Most of the choices below were made twice: once at the start, and again after a measurement showed
+that the first choice was wrong. Those are marked \textbf{changed}.
 
 \subsection{The core architecture}
 
@@ -308,8 +310,8 @@ do.
 Three fewer new slots at 22,100 gas each predicts a saving of 66,300. We measured \textbf{65,337}.
 On Sepolia, where storage is dearer still, \texttt{acceptOffer} fell \textbf{33.6\%} and
 \texttt{postOffer} \textbf{27.3\%}. \texttt{SafeCast} reverts if a value ever would not fit, and the
-ranges are absurdly generous: \texttt{size} as \texttt{uint96} holds billions of BTC, and
-\texttt{lastSettledAt} as \texttt{uint40} lasts until the year 36812. Full numbers in
+ranges are far larger than needed: \texttt{size} as \texttt{uint96} holds billions of BTC, and
+\texttt{lastSettledAt} as \texttt{uint40} lasts for about 35,000 years. Full numbers in
 \S\ref{sec:gas}.
 
 \subsubsection{Funding as a running total — changed after reading our own code}
@@ -323,9 +325,9 @@ The contract now keeps one running total, \texttt{cumulativeFunding()}, and \tex
 applies only from the moment it is posted}. Each trade remembers the total at its last settlement
 and owes the difference. There is a test for it.
 
-\cbox{\textbf{No scanner found this.} Slither did not flag it; it is not a code pattern, it is a
-finance bug. We found it by reading the code and asking what the worst thing an owner could do was.
-That question is worth more than a tool, and we would ask it first next time.}
+\cbox{\textbf{No scanner found this.} Slither did not flag it, because it is a finance error rather
+than a code pattern. We found it by reading the code and asking what the worst thing an owner could
+do was. We would ask that question first next time.}
 
 \subsubsection{A 65-hour calendar — changed so the contract matches the analysis}
 
@@ -344,15 +346,15 @@ margin engine, and the price can still respond to rates without touching the cod
 
 \subsubsection{A third, clearly-labelled set of contracts with a mock price}
 
-A real liquidation at the demo's size needs Bitcoin to move about 25\%. Waiting for that is not a
-plan, and unit tests alone are weaker evidence than the rubric asks for. So we deployed a third set
+A real liquidation at the demo's size needs Bitcoin to move about 25\%. Waiting for that move is not
+practical, and unit tests alone are weaker evidence than a live transaction. So we deployed a third set
 whose price feed is a mock anyone can move, labelled \texttt{Stress} in every address, document and
 page.
 
 The script does something better than simply forcing a liquidation: it computes the liquidation
 price from the formula in \S\ref{sec:liq}, shows the contract \emph{refusing} at 0.1\% below it, and
-then liquidating at 0.1\% above it. That is a test of our maths against the deployed bytecode, not a
-demonstration.
+then liquidating at 0.1\% above it. That checks our formula against the deployed code, rather than
+only showing that a liquidation can happen.
 
 \cbox{\textbf{The report must say this, so we say it here and again in \S\ref{sec:arch}: the stress
 set's Bitcoin price is a mock, and the demo set's weekend is a switch held by the deployer.} The
@@ -374,8 +376,8 @@ no admin at all, and a separately named copy carries the switch. \\
 
 \textbf{Fixed 4\% NAV}, not a posted NAV \emph{(changed from the proposal)} &
 A keeper posting NAV is another trusted role and another thing to attack. A fixed rate has none. The
-honest cost: our token structurally cannot show T-bill \emph{price} risk, which is 72\% of the fee we
-charge for it (\S\ref{sec:mockgap}). \\
+cost: our token cannot show T-bill \emph{price} risk, which is 72\% of the fee we charge for it
+(\S\ref{sec:mockgap}). \\
 
 \textbf{2-hour staleness limit} &
 Sits above the feed's roughly 1-hour heartbeat, so a normal gap does not stop settlement, while a
@@ -433,12 +435,12 @@ protections are built into the front end, and every one can be inspected in the 
   Chainlink price is stale or unset, a banner says that new trades and settlement are waiting.
 \end{itemize}
 
-\textbf{Why there are no slippage limits, and why that is stronger.} There is no pool and no order
+\textbf{Why there are no slippage limits.} There is no pool and no order
 book to walk, so there is no price impact to bound. A trade opens at the Chainlink price both sides
 can read before committing, and a weekend sale to the vault executes at NAV minus a discount fixed
-in contract storage. The fill is deterministic and knowable in advance, which is a better guarantee
-than a tolerance band. The honest counterpart is that the price is only as good as the oracle —
-which is why the two-hour staleness check and the banner exist.
+in contract storage. The fill is deterministic and known in advance, which is a stronger guarantee
+than a tolerance band. The limit of this is that the price is only as good as the oracle, which is
+why the two-hour staleness check and the banner exist.
 
 %====================== 3. ARCHITECTURE ======================
 \section{Architecture}\label{sec:arch}
@@ -469,12 +471,12 @@ A separately named copy with an owner's switch, so the weekend path can be shown
 \emph{only} by the Demo and Stress sets. \\
 
 \texttt{WeekendVault} & \texttt{ERC4626}, \texttt{Ownable} &
-The weekend shop. A pool of investors' tUSDC that buys sBILL at NAV minus a discount — only from the
+The weekend buyer. A pool of investors' tUSDC that buys sBILL at NAV minus a discount — only from the
 clearinghouse, and only while the market is closed. Anyone can trigger redemption on a business day.
 Inventory is held at cost and withdrawals are capped at cash. \\
 
 \texttt{Clearinghouse} & \texttt{Ownable}, \texttt{Pausable}, \texttt{ReentrancyGuard} &
-The referee. Holds margin, matches offers into bilateral trades, settles price moves and funding,
+The central contract. Holds margin, matches offers into bilateral trades, settles price moves and funding,
 converts collateral when the loser has no cash, and liquidates. \\
 \bottomrule
 \end{tabular}
@@ -482,7 +484,7 @@ converts collateral when the loser has no cash, and liquidates. \\
 
 \subsection{Every public function}
 
-\subsubsection*{\texttt{Clearinghouse} --- the referee}
+\subsubsection*{\texttt{Clearinghouse} --- the central contract}
 
 \begin{center}
 \footnotesize
@@ -514,7 +516,7 @@ converts collateral when the loser has no cash, and liquidates. \\
 \end{tabular}
 \end{center}
 
-\subsubsection*{\texttt{WeekendVault} --- the weekend shop}
+\subsubsection*{\texttt{WeekendVault} --- the weekend buyer}
 
 \begin{center}
 \footnotesize
@@ -574,9 +576,9 @@ amountPaid, so any underpayment is visible on-chain forever.
 \end{verbatim}
 \end{center}
 
-That last branch is the one we are least proud of and most insistent about stating: \textbf{there is
-no insurance fund}, so a large enough gap move can leave a winner underpaid. It is visible rather
-than hidden, and \S\ref{sec:risks} says what a production version would do about it.
+That last branch is the main weakness of the design, and we state it clearly: \textbf{there is no
+insurance fund}, so a large enough gap move can leave a winner underpaid. The shortfall is visible
+on-chain rather than hidden, and \S\ref{sec:risks} says what a production version would do about it.
 
 \subsection{Three deployments, and why}\label{sec:calendars}
 
@@ -617,7 +619,7 @@ Compiler & \texttt{solc 0.8.30+commit.73712a01} (pinned exactly in \texttt{hardh
 Optimizer & enabled, \texttt{runs = 200} \\
 EVM version & \texttt{prague} \\
 Licence & MIT, declared with SPDX in every file \\
-Libraries & OpenZeppelin Contracts — \texttt{ERC20}, \texttt{ERC4626}, \texttt{Ownable}, \texttt{Pausable}, \texttt{ReentrancyGuard}, \texttt{AccessControl}, \texttt{SafeERC20}, \texttt{SafeCast}, \texttt{Math}; Chainlink \texttt{AggregatorV3Interface} \\
+Libraries & OpenZeppelin Contracts — \texttt{ERC20}, \texttt{ERC4626}, \texttt{Ownable}, \texttt{Pausable}, \texttt{ReentrancyGuard}, \texttt{AccessControl}, \texttt{SafeERC20}, \texttt{SafeCast}, \texttt{Math}, \texttt{SignedMath}; Chainlink \texttt{AggregatorV3Interface} \\
 Per-contract metadata & \texttt{packages/hardhat/deployments/sepolia/*.json} — ABI, bytecode, deployed bytecode, immutable references, storage layout, devdoc, userdoc, constructor arguments and the full deployment receipt, for all 16 \\
 \bottomrule
 \end{tabular}
@@ -721,8 +723,8 @@ Stress sets. Every screenshot below was taken from the running application readi
 \begin{figure}[h!]\centering
 \includegraphics[width=\textwidth]{figures/screens/app_home.png}
 \caption{Overview. The live Chainlink price, the sBILL NAV, the vault's cash, the funding rate and
-the open trades, all read from the deployed contracts. The yellow badge states plainly that the
-deployer holds the demo weekend switch.}
+the open trades, all read from the deployed contracts. The yellow badge says that the deployer holds
+the demo weekend switch.}
 \end{figure}
 
 \begin{figure}[h!]\centering
@@ -764,11 +766,14 @@ into \texttt{config/assumptions.json}.}
 %====================== 4. FINANCIAL ANALYSIS ======================
 \section{Financial analysis}\label{sec:finance}
 
-Everything in this section comes from \texttt{docs/analysis.ipynb}. It runs end to end in about a
-minute, and \textbf{no number is typed into a cell}: every judgement call lives in
+Most of this section comes from \texttt{docs/analysis.ipynb}. It runs end to end in about a minute,
+and \textbf{no number is typed into a cell}: every judgement call lives in
 \texttt{config/assumptions.json} and every contract setting in \texttt{config/protocol.json}, so a
 reader who disagrees with us can change one file and rerun. The charts below are written straight to
-\texttt{docs/figures/} by the notebook.
+\texttt{docs/figures/} by the notebook. Two parts come from elsewhere: the historical stress weekends
+in \S\ref{sec:regimes} are written by \texttt{docs/stress\_weekends.py} from the same cached data with
+the notebook's conventions, and the break points in \S\ref{sec:breaks} were derived in the companion
+document \texttt{docs/pricing-and-risk.pdf}. Each section says so.
 
 \subsection{Method and data}
 
@@ -780,8 +785,8 @@ reader who disagrees with us can change one file and rerun. The charts below are
 \midrule
 BTC/USD hourly & Coinbase Exchange, \texttt{BTC-USD} & 2021-01-01 to 2026-10-30, 51,083 hours (13 filled) & Hedge backtest, closure moves, liquidation, regime stress \\
 BTC perp funding, hourly & Deribit \texttt{BTC-PERPETUAL}, \texttt{interest\_1h} & matched to the above & Funding realism and the hedge's carry \\
-3-month T-bill yield & FRED \texttt{DTB3}, daily & 2015-01-02 to 2026-10-28, 3,085 obs & The yield $y=4.01\%$ and weekend yield shocks \\
-Live contract reads & Our own Sepolia deployment & 28 values at block 12,052,195 & Reconciliation (\S\ref{sec:reconcile}) \\
+3-month T-bill yield & FRED \texttt{DTB3}, daily & 2015-01-02 to 2026-10-28, 2,957 obs (3,085 rows, holidays blank) & The yield $y=4.01\%$ and weekend yield shocks \\
+Live contract reads & Our own Sepolia deployment & 28 values at block \reconBlock{} & Reconciliation (\S\ref{sec:reconcile}) \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -805,8 +810,10 @@ Sepolia, so the analysis and the chain describe the same thing.}
 \;+\; \text{funding} \;+\; \text{sBILL interest} \;-\; \text{vault cost}
 \]
 
-with funding $=$ rate $\times$ average notional (positive means longs pay shorts), interest $=$ sBILL
-balance $\times\,4\%\times$ days$/365$, and vault cost $=$ 10bp $\times$ loss $\times\,65/168$, the
+with funding $=$ rate $\times$ average notional (positive means longs pay shorts; the rate is the
+median month's, 0.32\% of notional, about 3.8\% a year), interest $=$ sBILL balance
+$\times\,4\%\times$ days$/365$ on a balance that shrinks by half the loss as sBILL is sold to pay
+it, and vault cost $=$ 10bp $\times$ loss $\times\,65/168$, the
 share of the week the T-bill market is shut.
 
 \begin{figure}[h!]\centering
@@ -821,18 +828,19 @@ share of the week the T-bill market is shut.
   \item \textbf{Between $-32\%$ and $+26\%$ the result is flat}, at about \textbf{\$343 a month} per
   BTC. The parts, at a $+10\%$ move: spot $+\$7{,}785.37$, perp $-\$7{,}785.37$, funding
   $+\$260.93$, sBILL interest $+\$85.83$, vault cost $-\$3.01$. The hedge removes the price and
-  leaves the carry, which is the whole point.
-  \item \textbf{Outside that range the fund is not hedged at all}, and the upside in the chart is a
-  trap. It is path-dependent. If Bitcoin reaches \$97,959 the short is liquidated; if it then
+  leaves the carry, which is the purpose of the hedge.
+  \item \textbf{Outside that range the fund is not hedged at all}, and the apparent upside in the
+  chart is misleading, because the result is path-dependent. If Bitcoin reaches \$97,959 the short is
+  liquidated; if it then
   returns to \$77,854, the fund is down \textbf{\$20,595} on the perp with nothing on the spot side
   to offset it.
-  \item \textbf{Leverage is the whole game.} Over 2,099 rolling 30-day windows, hedge effectiveness
+  \item \textbf{Leverage decides the outcome.} Over 2,099 rolling 30-day windows, hedge effectiveness
   ($1 - \text{hedged variance}/\text{unhedged variance}$) is \textbf{97\% at 2$\times$, 92\% at
   2.6$\times$, 60\% at 4$\times$ and 34\% at 4.9$\times$}. Unhedged, those same windows have mean
   $+2.6\%$, standard deviation $16.9\%$ and a worst case of $-43.1\%$.
 \end{enumerate}
 
-\note{Two honest caveats. The backtest never tops up margin and never re-hedges after a liquidation,
+\note{Two caveats. The backtest never tops up margin and never re-hedges after a liquidation,
 which a real fund would do, so it is pessimistic. And ignore the ``mean hedged'' column when
 comparing leverage: it \emph{rises} with leverage only because Bitcoin went up over the sample, so a
 fund liquidated out of its short kept the gain. Read the standard deviation and the worst case.}
@@ -841,8 +849,10 @@ fund liquidated out of its short kept the gain. Read the standard deviation and 
 
 The contract exposes unrealized profit and loss directly as
 \texttt{unsettledPnl(account, price)}: the mark-to-market gain on an open position that has not yet
-been settled in cash. At the moment of the reconciliation read, with Bitcoin at \$76,997.54 against
-an entry of \$78,462.47:
+been settled in cash. At the moment of the reconciliation read, with Bitcoin at \$\reconBtc{} and
+trade 1 last settled at \$78,462.47 (the keeper's settlement in \S\ref{sec:liverun}):
+% UPDATE AFTER THE VIDEO: if trade 1 is settled again, the last-settled price above changes. Read it
+% from the trade table on the site or from the Settled event, and update it here.
 
 \begin{center}
 \footnotesize
@@ -850,18 +860,19 @@ an entry of \$78,462.47:
 \toprule
 & \textbf{Model} & \textbf{Read from the chain} \\
 \midrule
-Trade 1, long's unrealized P\&L & $-\$1{,}465.931315134200729750$ & $-\$1{,}465.931315134200729750$ \\
-Trade 1, short's unrealized P\&L & $+\$1{,}465.931315134200729750$ & $+\$1{,}465.931315134200729750$ \\
-Fund A, margin value after haircut & \$29{,}270.060432835654661463 & \$29{,}270.060432835654661463 \\
-Fund A, equity & \$30{,}735.991747969855391213 & \$30{,}735.991747969855391213 \\
-Fund A, maintenance margin & \$7{,}699.754182312000000000 & \$7{,}699.754182312000000000 \\
-Fund A, initial margin & \$15{,}399.508364624000000000 & \$15{,}399.508364624000000000 \\
+Trade 1, long's unrealized P\&L & $-\$\liveLongPnl$ & $-\$\liveLongPnl$ \\
+Trade 1, short's unrealized P\&L & $+\$\liveLongPnl$ & $+\$\liveLongPnl$ \\
+Fund A, margin value after haircut & \$\liveMarginValue & \$\liveMarginValue \\
+Fund A, equity & \$\liveEquity & \$\liveEquity \\
+Fund A, maintenance margin & \$\liveMaintenance & \$\liveMaintenance \\
+Fund A, initial margin & \$\liveInitial & \$\liveInitial \\
 \bottomrule
 \end{tabular}
 \end{center}
 
 Unrealized P\&L is exactly zero-sum between the two sides, as a bilateral design requires, and the
-fund's equity of \$30,736 sits comfortably above its \$7,700 maintenance requirement. The
+fund's equity of \$\liveEquityRounded{} sits well above its \$\liveMaintenanceRounded{} maintenance
+requirement. The
 \textbf{strategy} this implies is stated in \S\ref{sec:pnlstrategy}.
 
 \subsection{Funding}\label{sec:funding}
@@ -968,8 +979,9 @@ Hourly volatility & \textbf{0.523\%} & \textbf{0.680\%} \\
 \toprule
 \textbf{65-hour closure, 304 weekends since 2021} & \\
 \midrule
-99th-percentile move against a short (price up) & $+13.47\%$ \\
-99th-percentile move against a long (price down) & $-14.42\%$ \\
+99th-percentile adverse excursion within a closure, against a short (price up) & $+13.47\%$ \\
+99th-percentile adverse excursion within a closure, against a long (price down) & $-14.42\%$ \\
+99th-percentile Friday-to-Monday net move, up / down & $+11.10\%$ / $-12.97\%$ \\
 Worst closure in the sample & $20.41\%$ \\
 Fitted growth of volatility with horizon (exponent) & 0.493 \quad\note{(square-root rule says 0.5)} \\
 Weekend-to-overnight volatility ratio & 1.66 \quad\note{(square-root rule predicts 1.96)} \\
@@ -983,15 +995,21 @@ Weekend-to-overnight volatility ratio & 1.66 \quad\note{(square-root rule predic
 dangerous because they are long and because the collateral cannot be sold.}
 \end{figure}
 
+\note{An adverse excursion is the largest loss reached at any hourly settlement during the closure,
+which is what settlement actually charges and what the vault has to fund. The Friday-to-Monday net
+move is smaller because prices partly recover before Monday. The vault sizing below uses the
+excursion.}
+
 \textbf{Three consequences.}
 
 \begin{itemize}
   \item \textbf{The weekend problem is a plumbing problem, not a volatility problem.} Bitcoin does
-  not misbehave at weekends. The T-bill market being shut is the entire issue — which is precisely
-  what a vault, rather than a bigger margin requirement, is the right answer to.
-  \item \textbf{The square-root rule overstates the tail.} The 99\% move over 65 hours is 15.9\%
-  measured, against 19.3\% if you scale a one-hour move. Using the rule would have made us hold about
-  20\% more vault capital than the data requires.
+  not misbehave at weekends. The T-bill market being shut is the entire issue, which is why a vault,
+  rather than a larger margin requirement, is the right response.
+  \item \textbf{The square-root rule overstates the tail.} Over every 65-hour window in the sample,
+  the 99th percentile of the absolute move is 15.9\%, against 19.3\% if the one-hour figure is scaled
+  by the square root of time. Using the rule would have made us hold about 20\% more vault capital
+  than the data requires.
   \item \textbf{Maintenance margin holds up well.} A 10\% margin would have been breached by a
   single-hour move in only \textbf{2 of 51,083 hours}, and by a two-hour move in 4 — all in January
   and May 2021. Two hours is the relevant window because it is the oldest price the contract accepts.
@@ -1005,8 +1023,8 @@ $8.7\%$--$18.3\%$ for falls, so read these as ranges, not points.}
 
 \subsection{What should the vault charge?}\label{sec:vaulteconomics}
 
-This is the question the professor's feedback asked, and the answer has two halves that give very
-different numbers. Getting that distinction right is the most useful thing in our analysis.
+This is the question the proposal feedback asked. The answer has two parts that give very different
+numbers, and the distinction between them is the most useful result in our analysis.
 
 \subsubsection*{Part 1 --- the cost of each use}
 
@@ -1023,13 +1041,16 @@ Per dollar the vault actually deploys over a closure of $h$ hours:
 with $y$ the T-bill yield, $\pi$ the hurdle premium vault depositors require above T-bills, $D$ the
 collateral's duration, $\Delta y$ the weekend yield shock, and $p_\ell$ the chance of a Monday
 holiday. Note that the first two terms largely cancel: the vault's capital must earn $y+\pi$, but the
-sBILL it is holding is itself earning $y$, so only the premium has to come out of the discount.
+sBILL it is holding is itself earning $y$, so only the premium has to come out of the discount. The
+notebook adds one more small term: an allowance of about 0.3bp for a redemption gate (one gate in
+twenty years, costing 3\%). The companion document omits it, which is why its base case is 6.3bp
+where the notebook's, used below, is 6.6bp.
 
 $\Delta y$ is an \textbf{empirical percentile, not a standard deviation}, and that choice is
-deliberate. Weekend yield moves are nowhere near normal: a normal distribution expects 0.04 weekends
-beyond $4\sigma$ in a sample this size and we observe nine, and June 2022 is an $8.4\sigma$ move that
-a normal distribution says cannot happen. We read the quantile straight off 597 observed weekends
-instead.
+deliberate. Weekend yield moves are far from normal: a normal distribution expects 0.04 weekends
+beyond $4\sigma$ in a sample this size and we observe nine, and June 2022 is an $8.4\sigma$ move
+(both computed in \texttt{docs/pricing-and-risk.pdf}). We read the quantile straight off 597
+observed weekends instead.
 
 \begin{center}
 \small
@@ -1093,7 +1114,7 @@ Average utilisation at that sizing --- both directions & 24.61\% \\
 the 4.01\% it could have earned simply holding T-bills.}
 \end{figure}
 
-\cbox{\textbf{The headline finding, and we are reporting it against ourselves.} At the deployed
+\cbox{\textbf{The main finding, which goes against our own deployed setting.} At the deployed
 \textbf{10bp the vault earns 1.2--1.7\% a year against 4.01\% on T-bills}. It loses to its own
 alternative. The cause is \emph{not} the weekend: 10bp covers the 6.6bp cost of every use
 comfortably. The cause is that three quarters of the vault's capital is idle waiting for a weekend
@@ -1112,10 +1133,9 @@ T-bills $+$ 2\%}, serving both directions from one pool.}
   this; it is the single highest-value extension.
 \end{enumerate}
 
-\textbf{What we did about it.} We left 10bp deployed and report the result openly, because the
-contracts are frozen and because a result that contradicts our own prior is worth more than a tidy
-one. The discount is owner-adjustable up to 1\% without a redeploy, so the fix is one transaction
-away, and the Economics page will post it.
+\textbf{What we did about it.} We left 10bp deployed, because the contracts are frozen, and we report
+the result as it is. The discount is owner-adjustable up to 1\% without a redeploy, so the fix is one
+transaction away, and the Economics page can post it.
 
 \subsection{Is the fund better off? The price band}\label{sec:band}
 
@@ -1172,9 +1192,8 @@ Fund will pay at most this, against holding everything in cash & 119 \\
 
 \cbox{\textbf{A workable price exists between 28 and 42bp — and only against the cash-buffer
 alternative.} Against a fund disciplined enough to sell T-bills every Friday there is no overlap at
-all. This is a narrow business and we would rather say so than round the numbers until it looks
-wide. It also requires rates: at 2021's 0.05\%, a user of this product would have \emph{lost} about
-\$2,222 a year on a \$1m hedge.}
+all. This is a narrow business, and we say so. It also requires rates: at 2021's 0.05\%, a user of
+this product would have \emph{lost} about \$2,222 a year on a \$1m hedge.}
 
 \subsection{Stress: what history would have done to us}\label{sec:regimes}
 
@@ -1183,28 +1202,24 @@ excursion from Friday 4pm ET on settled hourly closes. Excursion, not the Friday
 because settlement is hourly: the loser pays as the price goes against it, and a later recovery does
 not hand back collateral already sold.
 
+The table is written by \texttt{docs/stress\_weekends.py} from the cached Coinbase series, with the
+notebook's conventions (hourly settlement at the candle open, Friday 4pm New York time, 65 hours), so
+it agrees with the notebook's table of the busiest weekends (Section~C). Each row is the worst
+closure within three weeks of the event, and the script checks that. The companion document's
+version of this table uses a slightly different convention (hourly closes from Friday 20:00 UTC) and
+takes each named event's own weekend, so its figures differ by small amounts and, for October 2025,
+it shows the 24th where this rule selects the 10th, the weekend of the figure below. Its conclusions
+hold under both; where the two differ, this table is the one to cite.
+
 \begin{center}
 \small
-\begin{tabular}{@{}p{3.5cm}p{1.8cm}rrrp{1.9cm}@{}}
-\toprule
-\textbf{Regime} & \textbf{Weekend} & \textbf{BTC open} & \textbf{Excursion} & \textbf{Sold per \$1m} & \textbf{\% of a 95th-pct vault} \\
-\midrule
-Yen carry unwind & 2024-08-02 & \$62{,}553 & 20.38\% & \$203{,}816 & \textbf{218\%} \\
-June 2022 CPI shock & 2022-06-10 & \$29{,}169 & 19.06\% & \$190{,}567 & \textbf{204\%} \\
-SVB / USDC depeg & 2023-03-10 & \$19{,}972 & 13.54\% & \$135{,}378 & \textbf{145\%} \\
-May 2021 mining ban & 2021-05-14 & \$49{,}193 & 12.80\% & \$127{,}973 & \textbf{137\%} \\
-LUNA/UST collapse & 2022-05-06 & \$36{,}081 & 9.10\% & \$91{,}048 & 97\% \\
-Oct 2025 deleveraging & 2025-10-24 & \$110{,}920 & 4.63\% & \$46{,}333 & 50\% \\
-FTX collapse & 2022-11-11 & \$16{,}573 & 4.45\% & \$44{,}540 & 48\% \\
-\midrule
-Typical weekend & --- & --- & 3.98\% & \$39{,}795 & 43\% \\
-\bottomrule
-\end{tabular}
+\stressTable
 \end{center}
 
 \textbf{Read that last column carefully, because it is the single most important risk number in this
-project.} A vault sized at the 95th percentile holds \$93,522 per \$1m of notional, and
-\textbf{four of the seven crises exceed it}. When the vault empties, \texttt{settle()} reverts and
+project.} A vault sized at the 95th percentile of that excursion distribution holds
+\$\stressVaultNinetyFive{} per \$1m of notional, and
+\textbf{\stressExceed{} of the seven crises exceed it}. When the vault empties, \texttt{settle()} reverts and
 settlement waits for Monday — a safe failure, but a failure, and exactly in the weekends the product
 exists for.
 
@@ -1214,11 +1229,11 @@ question from ``is 10bp enough?'' — which we can now answer yes, for each use 
 stands behind it?'', which is where the remaining work belongs. We size at the 99th percentile for
 this reason, and we would go higher.}
 
-\textbf{Does the position survive?} At the demo's 2.6$\times$, nothing is liquidated in any of the
-seven regimes. At 4$\times$ the June 2022 and yen-unwind longs go, and the SVB short goes. At the
+\textbf{Does the position survive?} By the same script, at the demo's 2.6$\times$ nothing is
+liquidated in any of the seven regimes. At 4$\times$ the June 2022 and yen-unwind longs go, and the SVB short goes. At the
 4.85$\times$ maximum the 2021 mining-ban long goes too. \textbf{The demo is safe because it is
-conservatively levered, not because the parameters are strong} — a distinction worth stating plainly
-rather than letting the Sepolia run imply otherwise.
+conservatively levered, not because the parameters are strong}, which the Sepolia run alone would not
+show.
 
 \begin{figure}[h!]\centering
 \includegraphics[width=0.94\textwidth]{figures/E2_oct_2025_stress.png}
@@ -1242,15 +1257,15 @@ the cell raises an error rather than reporting a near miss.
 \small
 \begin{tabular}{@{}p{7.2cm}rp{5.4cm}@{}}
 \toprule
-\textbf{Read at block 12,052,195, 2026-11-03 02:03 UTC} & \textbf{Compared} & \textbf{Result} \\
+\textbf{Read at block \reconBlock, \reconTime} & \textbf{Compared} & \textbf{Result} \\
 \midrule
 Settlements (amount due and funding) & 8 & all match \\
-Vault purchase (price and sBILL taken) & 3 & all match \\
+Vault purchase (price and sBILL taken) & 2 & all match \\
 Vault redemption (cash received and profit) & 3 & all match \\
 sBILL subscriptions (NAV and shares minted) & 4 & all match \\
 Live state (NAV, purchase price, funding total) & 4 & all match \\
 Account health (collateral, equity, both margin levels) & 4 & all match \\
-Unrealized P\&L, both sides of trade 1 & 1 & match \\
+Unrealized P\&L, both sides of trade 1 & 2 & all match \\
 Liquidation reward, stress set & 1 & match \\
 \midrule
 \textbf{Total} & \textbf{28} & \textbf{28 match, difference 0} \\
@@ -1270,8 +1285,11 @@ change and a liquidation — all 51 comparisons matched too.
 
 \subsection{Where each assumption breaks}\label{sec:breaks}
 
-Stating assumptions is table stakes. The useful exercise is solving each one for the value at which
-our conclusion stops holding, and then asking whether history has already been there.
+Stating assumptions is necessary but not sufficient. The useful exercise is to solve each one for the
+value at which our conclusion stops holding, and then ask whether history has already reached it.
+The thresholds below were derived in \texttt{docs/pricing-and-risk.pdf} from the four-term
+decomposition of \S\ref{sec:vaulteconomics}, without the 0.3bp gate allowance; the notebook's
+sensitivity grids (Section~C) show the same pattern.
 
 \begin{center}
 \small
@@ -1314,12 +1332,12 @@ assumed.}
 Missing the hurdle (depositors earn less than they required) happens at 32.9bp and \emph{has}
 occurred once, June 2022. Losing principal (the ERC-4626 share price actually falls) needs 51.9bp and
 has never occurred. On \$100,000 routed through the vault, June 2022 would have left it \$5.19 short
-of what it promised, having still made \$42.25. A knife-edge, not a cliff.}
+of what it promised, having still made \$42.25. A small shortfall, not a loss of principal.}
 
-\subsection{Three risks we priced at zero, and said so}\label{sec:mockgap}
+\subsection{Three risks the fee does not properly price}\label{sec:mockgap}
 
-A fee that silently absorbs everything is a fee nobody can check. Ours excludes three things
-deliberately.
+Three risks are left out of the fee, or covered only by a nominal allowance, so that a reader can see
+exactly what it covers and what it does not.
 
 \begin{enumerate}
   \item \textbf{Our own token cannot express the risk that dominates its fee.} \texttt{SBill.nav()}
@@ -1328,12 +1346,13 @@ deliberately.
   experience}. The 35bp spike of June 2022 would be invisible to us. We priced the asset the design
   calls for rather than the mock standing in for it, which is the right way round, but it means the
   largest component of our fee is one no unit test and no Sepolia transaction can exercise.
-  \item \textbf{Redemption gates: named, not priced.} A tokenized fund can suspend redemptions, and
-  our own \texttt{SBill} has the same shape of failure — \texttt{redeem()} pays from a reserve funded
-  once at deployment. But the sector is about two years old and has never been stressed, so any
-  frequency we assigned would be a prior wearing the costume of an estimate. Instead we state the
-  threshold: \textbf{the fee stops clearing its hurdle if gates reach about one weekend in eighty},
-  roughly once every eighteen months. That is a claim we can defend.
+  \item \textbf{Redemption gates: a nominal allowance, not an estimate.} A tokenized fund can
+  suspend redemptions, and our own \texttt{SBill} has the same shape of failure — \texttt{redeem()}
+  pays from a reserve funded once after deployment. The notebook's base case allows about 0.3bp for
+  this (one gate in twenty years, costing 3\%). The sector is about two years old and has never been
+  stressed, so that frequency is a judgement rather than an estimate. The more useful statement is
+  the threshold: \textbf{the fee stops clearing its hurdle if gates reach about one weekend in
+  eighty}, roughly once every eighteen months.
   \item \textbf{The stablecoin leg, which is the largest exposure in the whole system.} The model
   prices 4.51bp of risk on paper the vault holds for 65 hours, and \textbf{zero} on the stablecoin it
   holds permanently. In March 2023 USDC traded at \$0.87 — \textbf{1,300bp}, more than two hundred
@@ -1364,7 +1383,7 @@ rather than silently.
 
 \subsection{The test suite}
 
-One command, \texttt{yarn test}. \textbf{37 tests, all passing}, in about a second, across eleven
+One command, \texttt{yarn test}. \textbf{37 tests, all passing}, in about a second, across thirteen
 groups. \textbf{25 of them expect a revert} — we tested what the contracts refuse at least as hard
 as what they allow.
 
@@ -1446,6 +1465,7 @@ timestamp updates \emph{before} any token movement in \texttt{\_settle}.
 \texttt{incorrect-equality} (Medium) $\times3$ & \texttt{shares == 0}, \texttt{amountDue == 0}, \texttt{tradeId == 0} & Each is a ``nothing to do'' check. Sending the vault one wei of sBILL only means it gets redeemed; a trade ID cannot be influenced from outside \\
 \texttt{unused-return} (Medium) & \texttt{\_price} & Deliberate. \texttt{latestRoundData} returns five values and we check four. \texttt{startedAt} adds nothing once \texttt{updatedAt} is checked \\
 \texttt{missing-zero-check} (Low) & \texttt{setClearinghouse} & Harmless: a zero address leaves the link unset and the owner can call again. It can never be changed once set \\
+\texttt{reentrancy-events} (Low) & \texttt{redeemInventory} & The event is emitted after a call to sBILL, our own contract, and the inventory cost is already zeroed before that call \\
 \texttt{timestamp} (Low) $\times10$ & NAV, funding, calendar, staleness, faucet & The system depends on the clock by design. A validator can move a block's time a few seconds; at 4\% a year that is a fraction of a cent \\
 \texttt{solc-version} (Info) & \texttt{pragma \^{}0.8.20} & The pragma permits older compilers, but the project compiles with exactly 0.8.30, pinned in \texttt{hardhat.config.ts} \\
 \bottomrule
@@ -1454,8 +1474,8 @@ timestamp updates \emph{before} any token movement in \texttt{\_settle}.
 
 \subsubsection*{What the scanner could not find}\label{sec:selffound}
 
-This is the part we think matters. A scanner looks for known code shapes; it cannot tell whether the
-finance is right. Reading our own code found three things Slither missed, all now fixed:
+This part matters most. A scanner looks for known code patterns; it cannot tell whether the finance
+is right. Reading our own code found three things Slither missed, all now fixed:
 
 \begin{enumerate}
   \item \textbf{Funding applied backwards in time} — on a trade left unsettled for 30 days, the owner
@@ -1465,7 +1485,8 @@ finance is right. Reading our own code found three things Slither missed, all no
   \item \textbf{The calendar disagreed with the analysis} — 48 hours against 65. Both now use 65.
 \end{enumerate}
 
-And two weaknesses we found and have \emph{not} fixed, because the contracts are frozen:
+And two limitations we found after the deployment. The contracts are frozen, because the code must
+match what is on Sepolia, so for each we specify the production fix rather than redeploy:
 
 \begin{itemize}
   \item \textbf{A vault loss is invisible in the event log.}
@@ -1527,7 +1548,7 @@ the same three slots, where a fourth would have added 22,100 gas to every trade 
 \end{tabular}
 \end{center}
 
-\textbf{We took that trade deliberately: a correct number is worth more than 6,000 gas.} Opening a
+\textbf{We accepted that cost: a correct funding charge is worth more than 6,000 gas.} Opening a
 trade is still 24\% cheaper than where we started.
 
 \subsubsection*{What the main functions cost now}
@@ -1586,7 +1607,7 @@ Deploying one full set of contracts & 42--44 million \newline\note{(about 0.0021
 Sepolia charges roughly 3.5$\times$ the local figure for \texttt{acceptOffer} and about 7$\times$ for
 deploying the clearinghouse. A full run of everything costs about 0.0067 SepoliaETH.
 
-\cbox{\textbf{A lesson about gas estimates, paid for in a failed transaction.} One mock-price update
+\cbox{\textbf{A lesson about gas estimates, learned from a failed transaction.} One mock-price update
 in our live run \eshort{0x463025497e01ff34a10aa3bce9aa63964ff7237a3b9e5bf18edce2888dfcfdee}{ran out
 of gas}. The mock stores \texttt{block.timestamp}, and this update came straight after another. The
 estimate ran against the block holding that last update, so writing the same timestamp looked cheap:
@@ -1595,9 +1616,12 @@ change. Both demo scripts now set an explicit limit for updates that follow one 
 
 \subsection{Advanced functionality}\label{sec:advanced}
 
-The brief asks for at least three of oracles, L2, front end, promotion and measured gas, with
-evidence for each. We claim nine features, each with a transaction hash or a file, and all nine are
-listed in \texttt{submission.json}.
+The brief lists five features for any topic (a test suite with reverts, a Slither scan, measured gas
+with a change made because of it, a front end, and an off-chain keeper) and four for hedging
+(Chainlink staleness and sign checks, on-chain funding settlement, liquidation with a reward plus a
+keeper, and margin that earns yield). We claim nine features, each with a transaction hash or a file,
+and all nine are listed in \texttt{submission.json}. The brief's last hedging feature is margin that
+earns yield in Aave V3; ours earns T-bill yield through sBILL instead, which is the last row below.
 
 \begin{center}
 \small
@@ -1645,7 +1669,7 @@ Bitcoin moved 0.56\% that weekend, and only 0.9\% of the vault's cash was used. 
 idle-cash finding of \S\ref{sec:vaulteconomics}, observed live rather than modelled. A demo that
 happened to catch a 10\% weekend would have looked more impressive and taught us less.}
 
-\subsubsection*{What went wrong, which we would rather state than hide}
+\subsubsection*{What went wrong}
 
 \begin{itemize}
   \item \textbf{The liquidation step took three attempts, because of two bugs in our scripts. The
@@ -1655,15 +1679,21 @@ happened to catch a 10\% weekend would have looked more impressive and taught us
   three times, and the mock feed carries one failed transaction. We leave both in the record.
   \item \textbf{Etherscan's rate limit} rejected many verification requests on the first pass. A
   slower retry verified everything, and \texttt{yarn verify} now waits between requests.
-  \item \textbf{Not yet done:} no transaction has been sent from the deployed site through MetaMask.
-  Every flow was exercised on a local chain with a test wallet, and on Sepolia the pages read the live
-  contracts correctly. We state this rather than imply coverage we do not have.
 \end{itemize}
+
+\textbf{The site, used live.} On 4 November the whole weekend story was sent from the deployed site
+through MetaMask on Sepolia, after every flow had been exercised on a local chain with a test wallet.
+On the demo set the fund's wallet signed every step and the deployer signed only the two weekend
+switches: trade 2 settled through the vault, which bought 1,686.89 sBILL for \$2,122.75 and redeemed
+it on reopening for a \$1.71 profit, and trade 1 settled from cash. On the stress set a trade was
+opened, settled and then liquidated from the site, for a \$499 reward to the liquidator. The
+reconciliation in \S\ref{sec:reconcile} was read before that run and describes the state at its block.
 
 %====================== 6. GOING TO MARKET ======================
 \section{Going to market}\label{sec:gtm}
 
-Now the founder's question: is this a business?
+This section treats the project as a product: who would use it, why they would trust it, how it
+would reach them, and whether it pays for itself.
 
 \subsection{The market moved toward us while we built}
 
@@ -1680,7 +1710,7 @@ Derivatives venues then started accepting these instruments as margin: Binance a
 bank~\cite{binance,protofire}; Deribit and Crypto.com followed, with Deribit reported to apply a 2\%
 haircut~\cite{deribit,protofire}.
 
-\subsection{What nobody is doing, which is the whole opportunity}
+\subsection{What no incumbent does}
 
 \textbf{Every incumbent bridges the gap with an intermediary, and the intermediary re-introduces
 exactly what tokenization was meant to remove.}
@@ -1709,8 +1739,8 @@ absorb the mismatch. \textbf{A bilateral on-chain clearinghouse cannot. The cash
 constraint is what produces the vault, and it is the position incumbents cannot occupy while
 remaining intermediaries. Tokenized funds are issued without a clearing layer, and clearing venues
 operate without owning the collateral. \textbf{We build both halves as one system}, which is why the
-clearinghouse can read its collateral's redemption calendar and route settlement automatically at
-3am on a Sunday.
+clearinghouse can read its collateral's redemption calendar and route settlement automatically on a
+Sunday.
 
 \subsection{Users}
 
@@ -1753,7 +1783,7 @@ What stops me making an expensive mistake? & \S\ref{sec:ux}: 27 plain-English er
 
 \textbf{Why the admin-free calendar matters more than it looks.} An admin able to repoint the
 calendar at a contract reporting ``always closed'' could force every settlement through the vault at
-a discount, brick fund redemptions, and raise the collateral haircut toward liquidation thresholds —
+a discount, stop fund redemptions, and raise the collateral haircut toward liquidation thresholds —
 three extraction routes from one key. We removed the key.
 
 \textbf{And we disclose the exception.} The demonstration deployment uses a separately labelled
@@ -1800,7 +1830,7 @@ against T-bills, and pricing against T-bills is the only comparison that matters
 
 \textbf{So our promotional asset is the live reconciliation, not an airdrop:} 28 numbers read off
 deployed contracts matching the model to the wei, and a weekend settlement anyone can replay on
-Etherscan. For an audience of risk officers, a verifiable number beats a meme.
+Etherscan. For risk officers, a verifiable number is more persuasive than a marketing campaign.
 
 \subsection{Business model}\label{sec:business}
 
@@ -1818,10 +1848,10 @@ a 4.01\% yield:
 \toprule
 \textbf{Discount} & \textbf{Fee income} & \textbf{Carry} & \textbf{Total} & \\
 \midrule
-10bp (as deployed) & 1.29\% & 0.36\% & \textbf{1.65\%} & loses to T-bills \\
-28bp & 3.60\% & 0.36\% & \textbf{3.96\%} & matches T-bills \\
-\textbf{42bp (our price)} & 5.40\% & 0.36\% & \textbf{5.76\%} & before our share \\
-44bp & 5.66\% & 0.36\% & \textbf{6.02\%} & T-bills $+$ 2\% \\
+10bp (as deployed) & 1.28\% & 0.38\% & \textbf{1.66\%} & loses to T-bills \\
+28bp & 3.58\% & 0.38\% & \textbf{3.96\%} & matches T-bills \\
+\textbf{42bp (our price)} & 5.38\% & 0.38\% & \textbf{5.76\%} & before our share \\
+44bp & 5.63\% & 0.38\% & \textbf{6.01\%} & T-bills $+$ 2\% \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -1832,7 +1862,7 @@ depositors 31.5bp, which the model turns into \textbf{4.41\% a year against 4.01
 Two consequences, and we state both. First, the fund's 42bp ceiling sits \emph{below} the 44bp the
 vault would need to pay depositors a conventional 2\% risk premium — \textbf{at no price does this
 product clear a conventional hurdle rate.} It clears a T-bill-flat hurdle with about 40bp to spare,
-and that is the honest description of the opportunity. Second, pricing at the customer's ceiling
+and that is the accurate description of the opportunity. Second, pricing at the customer's ceiling
 leaves no room to absorb a rate move, which is why rate dependence is a first-order risk in
 \S\ref{sec:risks} rather than a footnote.
 
@@ -1876,10 +1906,11 @@ Clearing fees (1bp $\times$ 2 sides $\times$ 12 turns) & \$2{,}400 \\
 \end{center}
 
 \cbox{\textbf{Break-even is \$134m of hedged notional}, supported by a \$26m vault --- that vault
-being about 0.2\% of the \$15bn tokenized treasury market. At a \$200m target the protocol earns
-\textbf{\$753,277}
-against \$504,000 of costs, and the vault behind it needs \$39.4m of cash, which is 19.7\% of
-notional — the level that covered 99\% of historical weekends when longs and shorts share one pool.}
+being about 0.2\% of the \$15bn tokenized treasury market. In users, that is about 134 funds hedging
+\$1m each, or roughly 1,700 open positions at the demo's size of 1 BTC. At a \$200m target the
+protocol earns \textbf{\$753,277} against \$504,000 of costs, and the vault behind it needs \$39.4m of
+cash, which is 19.7\% of notional — the level that covered 99\% of historical weekends when longs and
+shorts share one pool.}
 
 Note which leg actually carries the business: \textbf{clearing fees are 64\% of revenue.} The vault
 is what makes the product possible, but a flat per-trade fee is what pays for it. A reader who
@@ -1913,8 +1944,8 @@ The same arithmetic decides whether liquidation even works. The reward is 50bp o
 of notional} and below that no rational keeper acts. On an L2 the threshold is about \textbf{\$1}, so
 the incentive holds at any size a user would trade.
 
-\cbox{\textbf{This is the single most consequential finding in our go-to-market work, and it came out
-of a gas table.} It changes no contract. It determines where the contracts can be deployed. And it
+\cbox{\textbf{This is the most consequential finding in the go-to-market work, and it came from the
+gas table.} It changes no contract. It determines where the contracts can be deployed. And it
 compounds with the BENJI access tiers: the cheaper chain is simultaneously the regulatory entry point
 and the only viable gas regime.}
 
@@ -1984,8 +2015,8 @@ and the only viable gas regime.}
   \item \textbf{Built the front end}, including the parts that exist only to stop a user losing
   money: 27 plain-English errors, 24 guards, two-click confirmations, and the liquidation price shown
   before you sign.
-  \item \textbf{Priced the business}, found that our own deployed fee does not work, and wrote that
-  down instead of quietly re-deploying.
+  \item \textbf{Priced the business}, found that our own deployed fee does not work, and reported
+  that rather than redeploying.
   \item \textbf{Wrote this report, and two companion documents} --- \texttt{docs/pricing-and-risk.pdf}
   and \texttt{docs/going-to-market.pdf} --- for readers who want every derivation.
 \end{enumerate}
@@ -2000,7 +2031,8 @@ deviation into a flat carry of roughly \textbf{\$343 a month per BTC}, at a cost
 
 \textbf{Pre-defined assumptions.} Entry \$77,853.66; 1 BTC of spot and 1 BTC of short perp;
 \$30,000 of margin posted as sBILL (2.60$\times$); counterparty long with \$30,000 of tUSDC; 30-day
-hold; funding at the sample mean of 6.6\% a year paid to shorts; sBILL accruing 4.00\%; vault
+hold; funding at the median month's rate, 0.32\% of notional a month (about 3.8\% a year), paid to
+shorts; sBILL accruing 4.00\%; vault
 discount 10bp applied to $65/168$ of each loss; initial margin 20\%, maintenance 10\%, weekday and
 weekend haircuts 1\% and 3\%.
 
@@ -2012,8 +2044,8 @@ weekend haircuts 1\% and 3\%.
 \midrule
 Spot Bitcoin (at a $+10\%$ move) & $+\$7{,}785.37$ & Mark-to-market on the holding \\
 Short perpetual & $-\$7{,}785.37$ & \textbf{Unrealized P\&L on the open trade}, read on-chain as \texttt{unsettledPnl} \\
-Funding received & $+\$260.93$ & Longs pay shorts, 20\% of months reverse \\
-sBILL interest & $+\$85.83$ & 4.00\% on \$30,000 for 30 days \\
+Funding received & $+\$260.93$ & Median month's rate on the average notional; longs pay shorts, 20\% of months reverse \\
+sBILL interest & $+\$85.83$ & 4.00\% for 30 days on the margin net of half the loss, which is paid in sBILL \\
 Vault discount paid & $-\$3.01$ & 10bp on the loss, for the 65/168 of the week the market is shut \\
 \midrule
 \textbf{Hedged total} & $\mathbf{+\$343.75}$ & Flat for any move between $-31.7\%$ and $+25.8\%$ \\
@@ -2058,36 +2090,31 @@ deployed vault is not yet a business}, and \S\ref{sec:vaulteconomics} gives the 
   \item \textbf{Measure before you optimise, and measure again afterwards.} Our instinct about where
   the gas went was right; our instinct about the discount was wrong. Only one of those was knowable
   without data.
-  \item \textbf{Say the limits out loud.} The mock token, the deployer's demo switch, the mock stress
-  price, the missing insurance fund, the three failed liquidation attempts, the MetaMask transaction
-  we have not yet sent. Every one is in this report, because a system you cannot criticise is a
-  system nobody can trust.
+  \item \textbf{State the limits.} The mock token, the deployer's demo switch, the mock stress price,
+  the missing insurance fund, the three liquidation attempts. Every one is in this report, because a system that cannot be criticised is a system
+  nobody can trust.
 \end{enumerate}
 
-\subsection{Thank you}
+\subsection{Acknowledgements}
 
-We want to end by saying this plainly: \textbf{we loved this course, and we loved getting to build
-this.}
+The weekly assignments built up the pieces one at a time: hashing, mining, signing and deploying one
+contract a week. This project is the first time all of them had to work together, against real
+market data, with real consequences for getting a formula wrong. The brief's instruction to think
+like a founder changed what we built: it is the reason we costed the business, found the gas
+constraint, and discovered that our own fee was wrong.
 
-Hashing, mining, signing and deploying one contract a week was the right way to learn it, and this
-project is the first time all of those pieces had to work at once, against real market data, with
-real consequences for getting a formula wrong. The brief's instruction to \emph{think like a
-founder} changed what we built. It is the reason we costed the business, found the gas constraint,
-and discovered that our own fee was wrong --- none of which a purely technical brief would have
-produced.
-
-Thank you to \textbf{Professor Radnay}, whose feedback on our proposal is visible in four specific
-places in the finished project: the two calendars, the two-hour staleness limit, the vault economics
-section, and the going-to-market plan. And thank you to \textbf{TA Hina Tomar}. We finished this
-project more convinced than when we started that there is a real product here --- and far better
-informed about exactly how narrow the path to it is.
+We thank Professor Radnay, whose feedback on our proposal shaped four parts of the finished project:
+the two calendars, the two-hour staleness limit, the vault economics section, and the going-to-market
+plan. We also thank TA Hina Tomar for support throughout the course. We finished more convinced than
+when we started that there is a real product here, and better informed about how narrow the path to
+it is.
 
 %====================== 8. AI USE ======================
 \section{AI Use}\label{sec:ai}
 
 Course policy is ``Welcome with Attribution,'' and the brief notes that because AI makes code
-cheaper to write, the bar for design, testing and analysis is higher. We agree, and here is the full
-account.
+cheaper to write, the bar for design, testing and analysis is higher. We agree, and this section gives
+the full account.
 
 \textbf{Tool used: Claude Code} (Anthropic), run from the terminal with access to this repository.
 
@@ -2100,7 +2127,7 @@ account.
 Contracts & Drafted all six, and the deployment script & 37 tests we specified; Slither; a line-by-line read that found the funding bug the AI had written and the tool had missed \\
 Tests & Drafted the suite from behaviours we named & We required reverts and invariants explicitly; the randomised seeds are run and reproducible \\
 Scripts & Keeper, demo, liquidation, evidence, verification & Every one was run live on Sepolia with Sai approving each command; two script bugs surfaced \emph{in} the live run and were diagnosed and fixed \\
-Front end & All seven pages, the error map, the guards & Every flow exercised on a local chain with a test wallet. \textbf{Not yet exercised through MetaMask on Sepolia} \\
+Front end & All seven pages, the error map, the guards & Every flow exercised on a local chain with a test wallet, \textbf{then the whole weekend story and a liquidation were sent from the deployed site through MetaMask on Sepolia on 4 November} \\
 Notebook & Drafted the analysis from a plan we wrote (\texttt{docs/ANALYSIS\_GUIDE.md}) & \textbf{The reconciliation is the check}: 28 values matched to the wei against the deployed contracts, and the cell errors rather than reporting a near miss. Every assumption was reviewed and several were changed \\
 Documents & Drafted this report and the two companions from our material & Every number traced to the notebook, the gas log, the test output or the chain. Figures recomputed independently of the notebook as a cross-check, which surfaced two definitional discrepancies that we resolved in favour of the stricter definition \\
 \bottomrule
@@ -2111,18 +2138,18 @@ Documents & Drafted this report and the two companions from our material & Every
 
 \begin{itemize}
   \item It wrote the original funding calculation, which applied a new rate backwards in time. We
-  found it by reading, not by testing. It is now the design decision we are proudest of.
+  found it by reading, not by testing. The running-total design in \S\ref{sec:design} replaced it.
   \item It wrote a 48-hour calendar against a 65-hour analysis. We caught it by putting the
   contract's own constants beside the analysis, which is also what the reconciliation now enforces
   automatically.
-  \item Its gas estimate for a repeated mock-price update was too low and the transaction failed on
-  Sepolia. We diagnosed the cause (the estimate ran against a block that made the storage write look
-  free) and set an explicit limit.
+  \item The script it wrote relied on the node's gas estimate, which was too low for a repeated
+  mock-price update, and the transaction failed on Sepolia. We diagnosed the cause (the estimate ran
+  against a block that made the storage write look free) and set an explicit limit.
 \end{itemize}
 
 \textbf{What stayed human.} The problem choice and the framing. The decision to build the end-to-end
-path first. Every on-chain command on Sepolia, approved and password-typed by Sai --- \textbf{no
-agent ever held a key}. The judgement calls in the analysis, and the decision to publish the result
+path first. Every on-chain command on Sepolia, approved and password-typed by Sai --- \textbf{the
+agent never saw a private key or the password}. The judgement calls in the analysis, and the decision to publish the result
 that contradicted our own deployed parameter. The choice not to issue a reward token. And the
 decision to state every limit rather than round the edges off.
 
@@ -2265,6 +2292,8 @@ CFTC guidance, 24 September 2026 & \textbf{Low} & \textbf{Not confirmed against 
 \texttt{yarn start} & The front end of \S\ref{sec:frontend}, reading live Sepolia. No wallet needed to browse \\
 \texttt{yarn chain} then \texttt{yarn onchain:all --network default} & The whole system on a local chain, with no keys. The mock price moves by itself \\
 \texttt{jupyter lab docs/analysis.ipynb} & Every figure and table in \S\ref{sec:finance}. Only Section F needs the network \\
+\texttt{python3 docs/stress\_weekends.py} & The stress-weekend table of \S\ref{sec:regimes}, from the cached data, written to \texttt{docs/report\_stress.tex} \\
+\texttt{python3 recon\_table.py} (from \texttt{docs/}) & Appendix~\ref{app:recon} and the live-state numbers of \S\ref{sec:finance}, from the notebook's reconciliation output \\
 \texttt{yarn onchain:all} & The full Sepolia run of \S\ref{sec:liverun}. \textbf{Needs the deployer key; already done} \\
 \texttt{yarn evidence} & Regenerates \texttt{submission.json} and \texttt{docs/deployments.md} from the on-chain logs \\
 \texttt{slither contracts/\ldots} & The scan of \S\ref{sec:slither}; exact invocation in \texttt{docs/slither.md} \\
@@ -2362,6 +2391,13 @@ Holders to Convert to USDC.'' \url{https://news.bitcoin.com/circle-unveils-smart
 \url{https://www.sherlock.xyz/post/smart-contract-audit-pricing-a-market-reference-for-2026}
 \bibitem{hlfees} Hyperliquid and dYdX published perpetual fee schedules, base tier: taker 4.5bp and
 5.0bp respectively. \url{https://app.hyperliquid.xyz/docs}
+\bibitem{rockawayx} RockawayX, ``Crypto Market Update --- October 2025.''
+\url{https://rockawayx.com/insights/crypto-market-update-october-2025}
+\bibitem{cmeclear} CME Group, ``CME Group to Launch 24/7 Cryptocurrency Futures and Options Trading
+on May 29,'' press release, 19 February 2026. \url{https://investor.cmegroup.com/node/54971}
+\bibitem{cmelaunch} CME Group, ``CME Group Announces Launch of 24/7 Cryptocurrency Futures and
+Options Trading,'' press release, 1 June 2026.
+\url{https://www.cmegroup.com/media-room/press-releases/2026/6/01/cme_group_announceslaunchof247cryptocurrencyfuturesandoptionstra.html}
 \end{thebibliography}
 
 \end{document}

@@ -23,27 +23,26 @@ As of the night of November 1, 2026 (New York time). **The final contracts are l
 |---|---|---|
 | Contracts and tests | Sai | Done: 37 tests pass |
 | Keeper, demo scripts, liquidation script | Sai | Done, and run on Sepolia |
-| Front end | Sai | Done: margin, trade, vault, controls, economics. Every button was pressed on a local chain with a test wallet on November 2, including a refused transaction, and four small fixes followed (fixed gas limits on the settle-path calls, no 0% rate from an empty field, the mock feed named where the feed is a mock, and no cleared field on a wrong-network refusal). On Sepolia, the pages read the live contracts correctly, but no transaction has been sent from the site with MetaMask yet; the video is where that happens |
+| Front end | Sai | Done: margin, trade, vault, controls, economics. Every button was pressed on a local chain with a test wallet on November 2, including a refused transaction, and four small fixes followed (fixed gas limits on the settle-path calls, no 0% rate from an empty field, the mock feed named where the feed is a mock, and no cleared field on a wrong-network refusal). On November 4 the whole weekend story and a stress-set liquidation were sent from the deployed site with MetaMask on Sepolia |
 | Slither scan | Sai | Done: [docs/slither.md](docs/slither.md) |
 | Gas, with one before/after change | Sai | Done: [docs/gas.md](docs/gas.md) |
 | README | Sai | Done |
 | Deploy, demo and liquidation on Sepolia | Sai | Done on November 1. See "The live run" below |
 | Etherscan verification | Sai | Done: 16 of 16 contracts, confirmed through the Etherscan API. The verified source of the 15 contracts we checked is identical to the files in this repo |
-| **Financial analysis** | Swastik | **First draft done:** [docs/analysis.ipynb](docs/analysis.ipynb). Needs your review. Section F reads the live contracts, and all 28 numbers match to the wei |
-| **Going-to-market plan** | Swastik | The model is built (notebook Section G and the Economics page), with placeholder inputs. The plan itself isn't written |
-| **Risks: BUIDL and BENJI holder restrictions** | Swastik | Not started |
-| Report PDF (`docs/`) | Both | Not started. Use LaTeX |
+| **Financial analysis** | Swastik | Done: [docs/analysis.ipynb](docs/analysis.ipynb), last run on November 3 at block 12,052,818; all 28 numbers match to the wei |
+| **Going-to-market plan** | Swastik | Done: report Section 6 and [docs/going-to-market.pdf](docs/going-to-market.pdf), priced at 42bp with a 25% protocol share |
+| **Risks: BUIDL and BENJI holder restrictions** | Swastik | Done: report Section 6, risk 2 |
+| Report PDF (`docs/`) | Both | Drafted by Swastik ([docs/report.tex](docs/report.tex)); checked against the repo, the chain and the notebook by Sai on November 3. See "The report" below for what is generated and what must change after the video |
 | Video, with every member speaking | Both | Planned: Sai has the shot list and the click-by-click weekend story (12 transactions from the site, only the two weekend switches signed by the deployer). Not recorded |
 | `submission.json` | Sai | Written and checked: it matches the brief's template, and all 16 addresses and 8 transactions were confirmed on Sepolia. **The video link is still empty.** Add it with `VIDEO_URL=https://... yarn evidence` |
 | Repo shared with the professor and TA, tag `final`, Brightspace upload | Both | Not done. The tag goes on last, because the repo at that tag is what gets graded |
 
 **What's left, in order:**
 
-1. **Swastik:** review the analysis, replace the `goToMarket` placeholders, and write the going-to-market plan, the BUIDL and BENJI risks, and report Section 4.
-2. **Sai:** send one transaction from the live site with MetaMask, which hasn't been tried yet.
-3. **Both:** record the video, with every member speaking and at least one live transaction (see "Commands").
-4. **Sai:** after recording, run `VIDEO_URL=... yarn evidence`, re-run the notebook and commit, because the recording adds new transactions.
-5. **Both:** finish the report PDF in `docs/`, share the repo, tag `final`, and have one person upload the report and `submission.json` to Brightspace by the deadline.
+1. **Both:** record the video, with every member speaking and at least one live transaction (see "Commands").
+2. **Sai:** after recording, run `VIDEO_URL=... yarn evidence`, re-run the notebook, regenerate the report's tables and rebuild the PDF (see "The report"), and commit, because the recording adds new transactions.
+3. **Both:** after that refresh, update trade 1's last-settled price where `docs/report.tex` is marked `% UPDATE AFTER THE VIDEO`, change the reconciliation count from 28 to the new total in `docs/report.tex` and `docs/going-to-market.tex`, and rebuild both PDFs. The "no MetaMask transaction yet" sentences were already replaced on November 4.
+4. **Both:** share the repo, tag `final`, and have one person upload the report and `submission.json` to Brightspace by the deadline.
 
 ## Swastik: start here
 
@@ -51,11 +50,20 @@ As of the night of November 1, 2026 (New York time). **The final contracts are l
 2. Set up and run the notebook (see "Setup"). Everything needed is in the repo, and you don't need any keys. Section F reads the live contracts over the internet, for free.
 3. Read each "Reading the results" section in the notebook, and challenge every assumption. **All of them are in [config/assumptions.json](config/README.md), so you never need to edit a code cell to change one.** The hurdle premium, redemption risk and gate loss are judgement calls you should be ready to defend.
 4. Try ideas on the app's **Economics** page (`yarn start`), which recalculates as you type. When you like the numbers, press "Copy as JSON", paste into `config/assumptions.json` and re-run the notebook.
-5. Write the going-to-market section. The brief asks for users, trust, promotion, business model and risks, with rough numbers on what volume covers the running costs. **The `goToMarket` inputs are made-up placeholders that only show how the model works. Replace them with numbers you can defend.** Section G then gives you the break-even hedge size.
-6. Write the BUIDL and BENJI risks. Confirm the facts first. Our working understanding is that BUIDL holders must be allowlisted through Securitize, and that BENJI shares are held in KYC'd registered accounts. What it means for us: the vault and clearinghouse would need to be approved holders, vault depositors might need KYC, sBILL could only move to approved addresses (our design only sends it to the vault or the fund, never to a liquidator), and Monday redemption depends on a partnership with the issuer.
-7. Write Section 4 of the report using `docs/figures/` and Section F's table, which is the required number matching Sepolia.
+5. The going-to-market plan, the holder-restriction risks and the report are written. What remains is under "What's left" above.
 
 [docs/ANALYSIS_GUIDE.md](docs/ANALYSIS_GUIDE.md) is the original analysis plan, with the formulas.
+
+## The report
+
+`docs/report.tex` is the submission's report, built with `latexmk -pdf report.tex` from `docs/` (then `latexmk -c` removes the build files, which are not git-ignored). Three parts are generated and must not be edited by hand: `docs/report_recon.tex` (Appendix B) and `docs/report_live.tex` (the block, time, BTC price and Fund A's live state used in Section 4), both written by `python3 recon_table.py` from the notebook's reconciliation output, so run it after every notebook re-run; and `docs/report_stress.tex`, written by `python3 docs/stress_weekends.py` from the cached price data, which only changes if that data does. `docs/report_addresses.tex` holds the address tables.
+
+Things to know when editing it:
+
+- Section 4 says where each number comes from: the notebook; `docs/stress_weekends.py`, which writes `docs/report_stress.tex` (the stress-weekend table, 4.8) from the cached data with the notebook's conventions; and `docs/pricing-and-risk.pdf`, whose break points (4.10) are not in the notebook. The companion's own stress table differs slightly from the script's and lists 24 October 2025 where the rule picks the 10th; the report's table is the one to trust.
+- One place is marked `% UPDATE AFTER THE VIDEO`: trade 1's last-settled price in Section 4, which changes if the video settles trade 1 again.
+- The companion `docs/going-to-market.tex` repeats the revenue table and the MetaMask sentence; keep them in step with the report.
+- The November 3 check found and fixed: a deliverables table that did not match the brief's list, three wrong counts (test groups, guards), a stale reconciliation read, two unsourced market claims (now cited), a revenue split that did not match the notebook's formula, and the going-to-market summary disagreeing with its own tables.
 
 ## How it works
 
@@ -127,11 +135,7 @@ The vault's profit is small because BTC moved only 0.56% and just 0.9% of the va
 - **Etherscan's rate limit** rejected many verification requests on the first pass. A slower retry verified them, and `yarn verify` now waits between requests.
 - **Sepolia gas is far above the local numbers,** about 3.5 times for `acceptOffer` and about 7 times for deploying `Clearinghouse`. A full run cost about 0.0067 SepoliaETH, and the deployer has about 0.0079 left. See [docs/gas.md](docs/gas.md).
 
-**Not tested on Sepolia yet:**
-
-- Sending a transaction from the site with MetaMask. The site reads the live contracts correctly, and every button was pressed on a local chain with a test wallet (last on November 2). The video's weekend story is the first live use, and the site now passes a fixed gas limit on settle, close, liquidate, take-out and the mock price update, so a wallet's short estimate can't repeat the out-of-gas failure above.
-- A liquidation from the site. The table shows Liquidate from the account's equity, while the contract decides from collateral after settlement, so in a narrow band the button can appear before the contract agrees; the site then shows the refusal in plain words. The recorded Stress-set liquidation is the evidence, and a live one needs the mock price moved well past the liquidation price.
-- A repeat run of the weekend story. Its first step withdraws the fund's spare tUSDC, with a fixed gas limit added after the live run. That has only run locally, so the first video take will be its first live use.
+**Tested from the site on Sepolia on November 4:** the whole weekend story with MetaMask (the fund's wallet signed every step, the deployer only the two weekend switches), which was also the first repeat run of the story, and a liquidation on the stress set from the site, for a $499 reward. The Liquidate button can still appear slightly before the contract agrees, because the table judges from equity while the contract judges from collateral after settlement; the site then shows the refusal in plain words. The notebook was re-run after that day's transactions and 40 numbers matched; the report still describes the November 3 read at block 12,052,818 and is refreshed after the video.
 
 ## What the professor asked for
 
@@ -226,10 +230,14 @@ yarn onchain:all
 DEMO=true DEMO_PAUSE=1 yarn demo:weekend --network sepolia
 ```
 
-**After any new Sepolia transactions,** run `yarn evidence` and re-run the notebook, which rewrites Section F's table. Both are read-only and need no password:
+**After any new Sepolia transactions,** run `yarn evidence` and re-run the notebook, which rewrites Section F's table. Both are read-only and need no password. Then regenerate the report's generated tables and rebuild the PDF:
 
 ```bash
 jupyter nbconvert --to notebook --execute --inplace docs/analysis.ipynb
+```
+
+```bash
+cd docs && python3 recon_table.py && latexmk -pdf report.tex && latexmk -c
 ```
 
 **Add the video link when you have it:**
