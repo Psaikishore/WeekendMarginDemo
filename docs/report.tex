@@ -110,22 +110,6 @@ The brief lists six deliverables. The table below says where each one is.
 \end{tabular}
 \end{center}
 
-\begin{center}
-\small
-\begin{tabular}{@{}p{4.3cm}p{11.5cm}@{}}
-\toprule
-\textbf{Graded area} & \textbf{Our answer, in one line} \\
-\midrule
-I. Rigor of methodology & Every input declared in one config file; 28 model values reconciled to the wei against the live contracts (\S\ref{sec:reconcile}); break points located for each assumption (\S\ref{sec:breaks}). \\
-II. Design decisions & 18 decisions, each with the alternative we considered and the reason; 5 of them changed during the build because of a measurement (\S\ref{sec:design}). \\
-III. Scope delivered & 6 contracts in 3 labelled deployment sets, 37 tests, keeper, 7-page front end, one-command on-chain run, notebook, 3 documents. All live (\S\ref{sec:arch}, \S\ref{sec:liverun}). \\
-IV. Presentation and going to market & This report with contents and screenshots; a go-to-market plan with a break-even number and a named reason the product cannot ship on mainnet (\S\ref{sec:gtm}). \\
-V. Quality of code & OpenZeppelin throughout, packed storage, custom errors, \texttt{nonReentrant} on every entry point, Slither scanned and every finding answered (\S\ref{sec:testing}). \\
-VI. Advanced functionality & Nine features, each with a transaction hash or a file (\S\ref{sec:advanced}). \\
-\bottomrule
-\end{tabular}
-\end{center}
-
 \vspace{6pt}
 \cbox{\textbf{The one-sentence version.} A fund can keep its money in Treasury bills, earning
 interest, and still pay what it owes on a Sunday — because when the T-bill
@@ -641,7 +625,7 @@ Per-contract metadata & \texttt{packages/hardhat/deployments/sepolia/*.json} —
 \texttt{config/protocol.json} & The eight settings the contracts are deployed with \\
 \texttt{config/assumptions.json} & Every judgement call in the analysis, in one place \\
 \nolinkurl{config/analysis_results.json} & The notebook's own output, consumed by the app's Economics page \\
-\nolinkurl{docs/data/sepolia_reconciliation.csv} & The 28 model-vs-chain comparisons of \S\ref{sec:reconcile} \\
+\nolinkurl{docs/data/sepolia_reconciliation.csv} & The model-vs-chain comparisons of \S\ref{sec:reconcile} \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -786,7 +770,7 @@ document \texttt{docs/pricing-and-risk.pdf}. Each section says so.
 BTC/USD hourly & Coinbase Exchange, \texttt{BTC-USD} & 2021-01-01 to 2026-10-30, 51,083 hours (13 filled) & Hedge backtest, closure moves, liquidation, regime stress \\
 BTC perp funding, hourly & Deribit \texttt{BTC-PERPETUAL}, \texttt{interest\_1h} & matched to the above & Funding realism and the hedge's carry \\
 3-month T-bill yield & FRED \texttt{DTB3}, daily & 2015-01-02 to 2026-10-28, 2,957 obs (3,085 rows, holidays blank) & The yield $y=4.01\%$ and weekend yield shocks \\
-Live contract reads & Our own Sepolia deployment & 28 values at block \reconBlock{} & Reconciliation (\S\ref{sec:reconcile}) \\
+Live contract reads & Our own Sepolia deployment & \reconCount{} values at block \reconBlock{} & Reconciliation (\S\ref{sec:reconcile}) \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -860,8 +844,8 @@ trade 1 last settled at \$78,462.47 (the keeper's settlement in \S\ref{sec:liver
 \toprule
 & \textbf{Model} & \textbf{Read from the chain} \\
 \midrule
-Trade 1, long's unrealized P\&L & $-\$\liveLongPnl$ & $-\$\liveLongPnl$ \\
-Trade 1, short's unrealized P\&L & $+\$\liveLongPnl$ & $+\$\liveLongPnl$ \\
+Trade 1, long's unrealized P\&L & $\liveLongPnlSigned$ & $\liveLongPnlSigned$ \\
+Trade 1, short's unrealized P\&L & $\liveShortPnlSigned$ & $\liveShortPnlSigned$ \\
 Fund A, margin value after haircut & \$\liveMarginValue & \$\liveMarginValue \\
 Fund A, equity & \$\liveEquity & \$\liveEquity \\
 Fund A, maintenance margin & \$\liveMaintenance & \$\liveMaintenance \\
@@ -1246,8 +1230,8 @@ BTC-only, single-exchange data cannot show.}
 
 \subsection{Reconciling the model with the chain}\label{sec:reconcile}
 
-\textbf{The brief requires at least one model number to match a result on Sepolia. We matched 28, to
-the wei.}
+\textbf{We compared \reconCount{} numbers the model computes with what the deployed contracts report
+on Sepolia. Every one agrees to the wei.}
 
 Contracts do whole-number arithmetic with 18 decimals, so the notebook uses Python integers and
 rounds exactly as the contract rounds. A ``match'' means equal to the last of 18 decimal places, and
@@ -1255,22 +1239,8 @@ the cell raises an error rather than reporting a near miss.
 
 \begin{center}
 \small
-\begin{tabular}{@{}p{7.2cm}rp{5.4cm}@{}}
-\toprule
-\textbf{Read at block \reconBlock, \reconTime} & \textbf{Compared} & \textbf{Result} \\
-\midrule
-Settlements (amount due and funding) & 8 & all match \\
-Vault purchase (price and sBILL taken) & 2 & all match \\
-Vault redemption (cash received and profit) & 3 & all match \\
-sBILL subscriptions (NAV and shares minted) & 4 & all match \\
-Live state (NAV, purchase price, funding total) & 4 & all match \\
-Account health (collateral, equity, both margin levels) & 4 & all match \\
-Unrealized P\&L, both sides of trade 1 & 2 & all match \\
-Liquidation reward, stress set & 1 & match \\
-\midrule
-\textbf{Total} & \textbf{28} & \textbf{28 match, difference 0} \\
-\bottomrule
-\end{tabular}
+% The table is written by recon_table.py from the reconciliation CSV, so its counts follow Appendix B.
+\reconCategoryTable
 \end{center}
 
 Two of these deserve a note. The \textbf{funding check} rebuilds the contract's running total from
@@ -1619,8 +1589,8 @@ change. Both demo scripts now set an explicit limit for updates that follow one 
 The brief lists five features for any topic (a test suite with reverts, a Slither scan, measured gas
 with a change made because of it, a front end, and an off-chain keeper) and four for hedging
 (Chainlink staleness and sign checks, on-chain funding settlement, liquidation with a reward plus a
-keeper, and margin that earns yield). We claim nine features, each with a transaction hash or a file,
-and all nine are listed in \texttt{submission.json}. The brief's last hedging feature is margin that
+keeper, and margin that earns yield). Each feature below has a transaction hash or a file as its
+evidence, and \texttt{submission.json} lists the same set. The brief's last hedging feature is margin that
 earns yield in Aave V3; ours earns T-bill yield through sBILL instead, which is the last row below.
 
 \begin{center}
@@ -1659,7 +1629,7 @@ then writes \texttt{submission.json} and \texttt{docs/deployments.md}.
 \textbf{The keeper} & One pass posted funding and settled both trades, unattended & \eshort{0xab77d5949d13654c01c898635aacaaef394ff454e6cc583a3ffd858b6cf55557}{keeper settlement} \\
 \textbf{Liquidation} \note{(stress set, mock price)} & The model predicted \$93,364.46. \textbf{The contract refused at 0.1\% below and accepted at 0.1\% above.} Trader~D earned \$467.29, and the vault later made \$10.94 & \eshort{0x4036f3cc7c2febb3abf3a7e4524d3040effc0cc84fe92f96e1217121b6ee146b}{liquidation} \\
 \textbf{The real calendar} & During the real weekend, at 02:18 UTC on Monday, the Main set reported \emph{closed}, and a simulated sBILL purchase failed with \texttt{MarketClosed} & Read from the contract; shown on the site \\
-\textbf{Reconciliation} & All 28 numbers match the chain to the wei & \S\ref{sec:reconcile} \\
+\textbf{Reconciliation} & All \reconCount{} compared numbers match the chain to the wei & \S\ref{sec:reconcile} \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -1772,7 +1742,7 @@ cash, at any hour, without pre-funding an idle buffer and without asking anyone'
 \midrule
 Can I read the code that is running? & All 16 contracts verified on Etherscan, confirmed through the API; the verified source of the 15 we checked is identical to the repository \\
 Has anyone tested it? & 37 tests with one command, 25 expecting reverts, 3 randomised invariant runs; Slither scanned with every finding answered in \texttt{docs/slither.md} \\
-Do the numbers add up? & 28 values read off the live contracts reconcile to the wei against the model (\S\ref{sec:reconcile}) \\
+Do the numbers add up? & \reconCount{} values read off the live contracts reconcile to the wei against the model (\S\ref{sec:reconcile}) \\
 What can the admin do to me? & Pause \emph{new} deposits and trades, and post a funding rate within a cap fixed at deployment. \textbf{Nothing else} --- settlement, liquidation, closing and withdrawal all keep working while paused \\
 Who controls the weekend? & \texttt{MarketCalendar} has \textbf{no owner and no settings}. Nobody, including us, can change when the weekend is \\
 What if the price feed dies? & Any answer older than 2 hours is rejected and the system stops rather than transacting on stale data \\
@@ -1828,7 +1798,7 @@ that token's price — which re-introduces exactly the volatility the customer c
 depositor earning ``4.41\% plus an uncertain amount of a governance token'' cannot price the product
 against T-bills, and pricing against T-bills is the only comparison that matters.
 
-\textbf{So our promotional asset is the live reconciliation, not an airdrop:} 28 numbers read off
+\textbf{So our promotional asset is the live reconciliation, not an airdrop:} \reconCount{} numbers read off
 deployed contracts matching the model to the wei, and a weekend settlement anyone can replay on
 Etherscan. For risk officers, a verifiable number is more persuasive than a marketing campaign.
 
@@ -1982,7 +1952,7 @@ and the only viable gas regime.}
   audit is budgeted at \$60,000 and has not been performed.
   \item \textbf{No operating history.} Every competitor named here has one to two years in
   production. Our evidence is a single live run: one weekend settlement through the vault, one
-  liquidation against a mock price, and 28 reconciled values.
+  liquidation against a mock price, and \reconCount{} reconciled values.
 \end{enumerate}
 
 %====================== 7. SUMMARY ======================
@@ -2011,7 +1981,7 @@ and the only viable gas regime.}
   with the contract refusing 0.1\% below our predicted price and accepting 0.1\% above it.
   \item \textbf{Built the financial analysis} on six years of hourly Bitcoin data, six years of
   funding, and eleven years of T-bill yields, with every judgement call in one config file.
-  \item \textbf{Reconciled the model against the chain} --- 28 numbers, to the wei.
+  \item \textbf{Reconciled the model against the chain} --- \reconCount{} numbers, to the wei.
   \item \textbf{Built the front end}, including the parts that exist only to stop a user losing
   money: 27 plain-English errors, 24 guards, two-click confirmations, and the liquidation price shown
   before you sign.
@@ -2128,7 +2098,7 @@ Contracts & Drafted all six, and the deployment script & 37 tests we specified; 
 Tests & Drafted the suite from behaviours we named & We required reverts and invariants explicitly; the randomised seeds are run and reproducible \\
 Scripts & Keeper, demo, liquidation, evidence, verification & Every one was run live on Sepolia with Sai approving each command; two script bugs surfaced \emph{in} the live run and were diagnosed and fixed \\
 Front end & All seven pages, the error map, the guards & Every flow exercised on a local chain with a test wallet, \textbf{then the whole weekend story and a liquidation were sent from the deployed site through MetaMask on Sepolia on 4 November} \\
-Notebook & Drafted the analysis from a plan we wrote (\texttt{docs/ANALYSIS\_GUIDE.md}) & \textbf{The reconciliation is the check}: 28 values matched to the wei against the deployed contracts, and the cell errors rather than reporting a near miss. Every assumption was reviewed and several were changed \\
+Notebook & Drafted the analysis from a plan we wrote (\texttt{docs/ANALYSIS\_GUIDE.md}) & \textbf{The reconciliation is the check}: \reconCount{} values matched to the wei against the deployed contracts, and the cell errors rather than reporting a near miss. Every assumption was reviewed and several were changed \\
 Documents & Drafted this report and the two companions from our material & Every number traced to the notebook, the gas log, the test output or the chain. Figures recomputed independently of the notebook as a cross-check, which surfaced two definitional discrepancies that we resolved in favour of the stricter definition \\
 \bottomrule
 \end{tabular}
@@ -2193,7 +2163,7 @@ Keeper settlement, trade 1 & \etx{0x3db43d0fa4e726f49f70f6266272149b16416faac082
 \end{center}
 
 %====================== B. RECONCILIATION ======================
-\section{The 28 reconciled numbers}\label{app:recon}
+\section{The reconciled numbers}\label{app:recon}
 
 Every value below was computed by the model in Python integers with the contract's own rounding
 rules, then read back from the deployed contracts or from a transaction receipt. All figures are in

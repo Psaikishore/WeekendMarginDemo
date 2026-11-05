@@ -2,7 +2,27 @@
 \newcommand{\reconBlock}{12,052,818}
 \newcommand{\reconTime}{2026-11-03 04:09 UTC}
 \newcommand{\reconBtc}{76,816.82}
-\newcommand{\liveLongPnl}{1{,}646.734697511218543664}
+\newcommand{\reconCount}{28}
+\newcommand{\reconCategoryTable}{%
+\begin{tabular}{@{}p{7.2cm}rp{5.4cm}@{}}
+\toprule
+\textbf{Read at block \reconBlock, \reconTime} & \textbf{Compared} & \textbf{Result} \\
+\midrule
+Settlements (amount due and funding) & 8 & all match \\
+Vault purchase (price and sBILL taken) & 2 & all match \\
+Vault redemption (cash received and profit) & 2 & all match \\
+sBILL redeemed with the fund (tUSDC paid) & 1 & match \\
+sBILL subscriptions (NAV and shares minted) & 4 & all match \\
+Live state (NAV, purchase price, funding total) & 4 & all match \\
+Account health (collateral, equity, both margin levels) & 4 & all match \\
+Unrealized P\&L, both sides of trade 1 & 2 & all match \\
+Liquidation reward, stress set & 1 & match \\
+\midrule
+\textbf{Total} & \textbf{28} & \textbf{28 match, difference 0} \\
+\bottomrule
+\end{tabular}}
+\newcommand{\liveLongPnlSigned}{-\$1{,}646.734697511218543664}
+\newcommand{\liveShortPnlSigned}{+\$1{,}646.734697511218543664}
 \newcommand{\liveMarginValue}{29{,}270.340627669335719301}
 \newcommand{\liveEquity}{30{,}917.075325180554262965}
 \newcommand{\liveMaintenance}{7{,}681.682265454000000000}

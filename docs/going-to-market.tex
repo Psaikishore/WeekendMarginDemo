@@ -27,6 +27,8 @@
 \renewcommand{\headrulewidth}{0.4pt}
 
 \newcommand{\note}[1]{{\small\color{muted}#1}}
+% The reconciliation count and block, shared with the report; written by recon_table.py.
+\input{report_live}
 
 \begin{document}
 
@@ -196,7 +198,7 @@ The code has been scanned with \textbf{Slither 0.11.6} against the deployment co
 26 findings on our own files. We fixed four — an uninitialised local in \texttt{liquidate}, two
 shadowed \texttt{owner} parameters, and an unindexed event address — and \texttt{docs/slither.md}
 explains each of the remaining 22 as a false positive or an accepted design choice, finding by
-finding. Independently, 28 values read from the live Sepolia contracts reconcile to the wei against
+finding. Independently, \reconCount{} values read from the live Sepolia contracts reconcile to the wei against
 the financial model.
 
 \textbf{sBILL is a mock.} It accrues a fixed 4\% and pays interest from a pre-funded reserve, so it demonstrates the integration rather than carrying real T-bill exposure. Section~\ref{sec:risks} sets out what a production issuer would require.
@@ -313,7 +315,7 @@ volatility the customer came here to remove. A depositor earning ``4.41\% plus a
 a governance token'' cannot price the product against T-bills, and pricing against T-bills is the
 only comparison that matters here.
 
-The promotional asset is therefore the \textbf{live reconciliation}, not a token launch: 28 numbers
+The promotional asset is therefore the \textbf{live reconciliation}, not a token launch: \reconCount{} numbers
 read off the deployed contracts matching the model to the wei, and a weekend settlement that anyone
 can replay on Etherscan. For an audience of risk officers, a verifiable number is worth more than an
 airdrop.
@@ -528,7 +530,7 @@ in Section~5: the cheaper chain is both the regulatory entry point and the only 
   is an exploit in the sense of letting an attacker take funds, and both are real.
   \item \textbf{Operating history.} We have none. Every competitor named here has one to
   two years of production operation. Our evidence is a single live run: one weekend settlement
-  through the vault, one liquidation against a mock price, and 28 reconciled values.
+  through the vault, one liquidation against a mock price, and \reconCount{} reconciled values.
 \end{enumerate}
 
 \appendix

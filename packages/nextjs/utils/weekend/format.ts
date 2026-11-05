@@ -17,8 +17,11 @@ export const fmtToken = (value: bigint | undefined, digits = 2) =>
 export const fmtBps = (bps: bigint | number | undefined) =>
   bps === undefined ? "–" : `${number(Number(bps) / 100, Number(bps) % 100 === 0 ? 0 : 2)}%`;
 
+export const fmtFundingPct = (rate: bigint | undefined) =>
+  rate === undefined ? "–" : `${number(toNumber(rate) * 100, 5)}%`;
+
 export const fmtFundingRate = (rate: bigint | undefined) =>
-  rate === undefined ? "–" : `${number(toNumber(rate) * 100, 5)}% an hour`;
+  rate === undefined ? "–" : `${fmtFundingPct(rate)} an hour`;
 
 export const fmtDuration = (seconds: number) => {
   const days = Math.floor(seconds / 86_400);

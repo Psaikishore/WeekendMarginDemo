@@ -9,7 +9,7 @@ import { Notice, Panel, Stat } from "~~/components/weekend/ui";
 import { useOpenTrades } from "~~/hooks/weekend/useMarket";
 import { useNow } from "~~/hooks/weekend/useNow";
 import { useSystem } from "~~/hooks/weekend/useSystem";
-import { fmtBps, fmtDuration, fmtFundingRate, fmtToken, fmtUsd } from "~~/utils/weekend/format";
+import { fmtBps, fmtDuration, fmtFundingPct, fmtToken, fmtUsd } from "~~/utils/weekend/format";
 
 const Home: NextPage = () => {
   const system = useSystem();
@@ -84,7 +84,11 @@ const Home: NextPage = () => {
           value={fmtUsd(system.vaultCash, 0)}
           hint={`${fmtToken(system.vaultSBill)} sBILL held`}
         />
-        <Stat label="Funding" value={fmtFundingRate(system.fundingRate)} hint="Positive: longs pay shorts" />
+        <Stat
+          label="Funding rate"
+          value={fmtFundingPct(system.fundingRate)}
+          hint="Per hour. Positive: longs pay shorts"
+        />
         <Stat
           label="Open trades"
           value={trades.length}

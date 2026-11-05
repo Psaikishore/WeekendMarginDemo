@@ -12,6 +12,7 @@
     "clean": "hardhat clean",
     "compile": "hardhat compile",
     "demo:liquidation": "tsx scripts/runWithDeployerPK.ts scripts/demoLiquidation.ts",
+    "demo:sbill-only": "hardhat run scripts/demoSBillOnly.ts",
     "demo:setup": "tsx scripts/runWithDeployerPK.ts scripts/demoSetup.ts",
     "demo:weekend": "tsx scripts/runWithDeployerPK.ts scripts/demoWeekend.ts",
     "deploy": "hardhat compile && tsx scripts/runHardhatDeployWithPK.ts",
